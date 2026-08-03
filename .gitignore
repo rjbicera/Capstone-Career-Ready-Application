@@ -1,0 +1,29 @@
+# Node
+backend/node_modules/
+backend/.env
+backend/dist/
+*.log
+npm-debug.log*
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/key.properties
+mobile/ios/Flutter/Flutter.podspec
+mobile/.packages
+
+# Firebase
+**/google-services.json
+**/GoogleService-Info.plist
+serviceAccountKey.json
+.firebase/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
