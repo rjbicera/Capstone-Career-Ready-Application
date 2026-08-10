@@ -68,9 +68,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _goToLogin() {
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   @override
@@ -144,7 +144,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.headline.copyWith(fontSize: 20),
+                          style: AppTextStyles.headline.copyWith(
+                            fontSize: 20,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Text(

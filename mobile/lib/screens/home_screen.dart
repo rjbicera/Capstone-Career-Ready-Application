@@ -1,0 +1,268 @@
+import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+
+class _ProgressCard {
+  const _ProgressCard({
+    required this.icon,
+    required this.bg,
+    required this.accent,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final Color bg;
+  final Color accent;
+  final String title;
+  final String subtitle;
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key, this.userName = 'Jenard', this.readiness = 0.72});
+
+  final String userName;
+  final double readiness; // 0.0 - 1.0
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _carouselController = PageController(viewportFraction: 0.8);
+  int _carouselIndex = 0;
+
+  static const _cards = [
+    _ProgressCard(
+      icon: Icons.description_rounded,
+      bg: AppColors.primaryLight,
+      accent: AppColors.primary,
+      title: 'Resume analysis',
+      subtitle: '2 suggestions pending',
+    ),
+    _ProgressCard(
+      icon: Icons.mic_rounded,
+      bg: AppColors.blueLight,
+      accent: AppColors.blue,
+      title: 'Mock interview',
+      subtitle: 'Not started',
+    ),
+    _ProgressCard(
+      icon: Icons.bar_chart_rounded,
+      bg: AppColors.primaryLight,
+      accent: AppColors.primary,
+      title: 'Skills assessment',
+      subtitle: '64% complete',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    super.dispose();
+  }
+
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Greeting row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_greeting, style: AppTextStyles.caption),
+                    Text(widget.userName, style: AppTextStyles.title),
+                  ],
+                ),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppColors.blueLight,
+                  child: Text(
+                    widget.userName.isNotEmpty
+                        ? widget.userName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: AppColors.blue,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+
+            // Readiness ring card — the ONE headline stat, kept simple
+            // on purpose so the dashboard doesn't overwhelm.
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: CircularProgressIndicator(
+                            value: widget.readiness,
+                            strokeWidth: 6,
+                            backgroundColor: AppColors.border,
+                            valueColor: const AlwaysStoppedAnimation(
+                              AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Overall readiness',
+                        style: AppTextStyles.caption,
+                      ),
+                      const SizedBox(height: 2),
+                      Text.rich(
+                        TextSpan(
+                          text: '${(widget.readiness * 100).round()}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                          children: const [
+                            TextSpan(
+                              text: '%',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 26),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Continue prep', style: AppTextStyles.title),
+                Text(
+                  'swipe →',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Swipeable progress carousel.
+            SizedBox(
+              height: 128,
+              child: PageView.builder(
+                controller: _carouselController,
+                itemCount: _cards.length,
+                onPageChanged: (i) => setState(() => _carouselIndex = i),
+                itemBuilder: (context, index) {
+                  final card = _cards[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: card.bg,
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: card.accent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              card.icon,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            card.title,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            card.subtitle,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_cards.length, (index) {
+                final isActive = index == _carouselIndex;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: isActive ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.primary : AppColors.border,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

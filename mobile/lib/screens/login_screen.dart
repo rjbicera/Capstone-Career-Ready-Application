@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'main_navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isSubmitting = false;
+  String? _errorText;
+
+  // TEMP: hardcoded test account for development only.
+  // Remove this once Firebase Auth is wired in.
+  static const _tempEmail = 'jenard@gmail.com';
+  static const _tempPassword = '12345678';
 
   @override
   void dispose() {
@@ -22,10 +29,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSignIn() async {
-    setState(() => _isSubmitting = true);
-    // TODO: wire this up to your Firebase Auth call.
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) setState(() => _isSubmitting = false);
+    setState(() {
+      _isSubmitting = true;
+      _errorText = null;
+    });
+
+    // TODO: replace this whole block with your Firebase Auth sign-in call.
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final isValid = email == _tempEmail && password == _tempPassword;
+
+    if (!mounted) return;
+
+    if (!isValid) {
+      setState(() {
+        _isSubmitting = false;
+        _errorText = 'Incorrect email or password.';
+      });
+      return;
+    }
+
+    setState(() => _isSubmitting = false);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MainNavigation()),
+      (route) => false,
+    );
   }
 
   @override
@@ -50,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(hintText: 'jane@email.com'),
+                decoration: const InputDecoration(hintText: 'jenard@gmail.com'),
               ),
               const SizedBox(height: 16),
 
@@ -75,6 +105,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+
+              if (_errorText != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _errorText!,
+                  style: const TextStyle(
+                    color: AppColors.danger,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
 
               Align(
                 alignment: Alignment.centerRight,
