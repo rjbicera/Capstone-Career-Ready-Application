@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'resume_analysis_screen.dart';
+import 'mock_interview_screen.dart';
+import 'skills_assessment_screen.dart';
 
 class _ProgressCard {
   const _ProgressCard({
@@ -8,6 +11,7 @@ class _ProgressCard {
     required this.accent,
     required this.title,
     required this.subtitle,
+    required this.onTap,
   });
 
   final IconData icon;
@@ -15,6 +19,7 @@ class _ProgressCard {
   final Color accent;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
 }
 
 class HomeScreen extends StatefulWidget {
@@ -31,29 +36,38 @@ class _HomeScreenState extends State<HomeScreen> {
   final _carouselController = PageController(viewportFraction: 0.8);
   int _carouselIndex = 0;
 
-  static const _cards = [
-    _ProgressCard(
-      icon: Icons.description_rounded,
-      bg: AppColors.primaryLight,
-      accent: AppColors.primary,
-      title: 'Resume analysis',
-      subtitle: '2 suggestions pending',
-    ),
-    _ProgressCard(
-      icon: Icons.mic_rounded,
-      bg: AppColors.blueLight,
-      accent: AppColors.blue,
-      title: 'Mock interview',
-      subtitle: 'Not started',
-    ),
-    _ProgressCard(
-      icon: Icons.bar_chart_rounded,
-      bg: AppColors.primaryLight,
-      accent: AppColors.primary,
-      title: 'Skills assessment',
-      subtitle: '64% complete',
-    ),
-  ];
+  List<_ProgressCard> _buildCards(BuildContext context) => [
+        _ProgressCard(
+          icon: Icons.description_rounded,
+          bg: AppColors.primaryLight,
+          accent: AppColors.primary,
+          title: 'Resume analysis',
+          subtitle: '2 suggestions pending',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ResumeAnalysisScreen()),
+          ),
+        ),
+        _ProgressCard(
+          icon: Icons.mic_rounded,
+          bg: AppColors.blueLight,
+          accent: AppColors.blue,
+          title: 'Mock interview',
+          subtitle: 'Not started',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const MockInterviewScreen()),
+          ),
+        ),
+        _ProgressCard(
+          icon: Icons.bar_chart_rounded,
+          bg: AppColors.primaryLight,
+          accent: AppColors.primary,
+          title: 'Skills assessment',
+          subtitle: '64% complete',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SkillsAssessmentScreen()),
+          ),
+        ),
+      ];
 
   @override
   void dispose() {
@@ -191,51 +205,54 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 128,
               child: PageView.builder(
                 controller: _carouselController,
-                itemCount: _cards.length,
+                itemCount: _buildCards(context).length,
                 onPageChanged: (i) => setState(() => _carouselIndex = i),
                 itemBuilder: (context, index) {
-                  final card = _cards[index];
+                  final card = _buildCards(context)[index];
                   return Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: card.bg,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: card.accent,
-                              borderRadius: BorderRadius.circular(10),
+                    child: GestureDetector(
+                      onTap: card.onTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: card.bg,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: card.accent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                card.icon,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                             ),
-                            child: Icon(
-                              card.icon,
-                              size: 18,
-                              color: Colors.white,
+                            const Spacer(),
+                            Text(
+                              card.title,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            card.title,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                            const SizedBox(height: 2),
+                            Text(
+                              card.subtitle,
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 11,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            card.subtitle,
-                            style: AppTextStyles.caption.copyWith(
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -246,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_cards.length, (index) {
+              children: List.generate(_buildCards(context).length, (index) {
                 final isActive = index == _carouselIndex;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'home_screen.dart';
+import 'resume_analysis_screen.dart';
+import 'mock_interview_screen.dart';
 import 'profile_screen.dart';
 
 /// Wraps the tabbed section of the app (after login) with a shared
-/// bottom nav bar. Add ResumeScreen/InterviewScreen into _screens
-/// once they're built — the placeholders keep tapping those tabs
-/// from crashing in the meantime.
+/// bottom nav bar.
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -20,8 +20,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final _screens = const [
     HomeScreen(),
-    _ComingSoonScreen(label: 'Resume analysis'),
-    _ComingSoonScreen(label: 'Mock interview'),
+    ResumeAnalysisScreen(),
+    MockInterviewScreen(),
     ProfileScreen(),
   ];
 
@@ -35,23 +35,6 @@ class _MainNavigationState extends State<MainNavigation> {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-      ),
-    );
-  }
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Text(
-          '$label — coming soon',
-          style: AppTextStyles.body.copyWith(color: AppColors.textMuted),
-        ),
       ),
     );
   }
