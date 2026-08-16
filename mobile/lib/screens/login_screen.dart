@@ -21,7 +21,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // TEMP: hardcoded test accounts for development only.
   // Remove this once Firebase Auth is wired in.
-  static const _tempEmail = ['jenard@gmail.com', 'rj@gmail.com', 'jayvee@gmail.com'];
+  static const _tempEmail = [
+    'jenard@gmail.com',
+    'rj@gmail.com',
+    'jayvee@gmail.com',
+  ];
   static const _tempPassword = ['12345678', '12345678', '12345678'];
 
   @override
@@ -158,8 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.4,
-                          valueColor:
-                              AlwaysStoppedAnimation(Colors.white),
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
                         ),
                       )
                     : const Text('Sign in'),

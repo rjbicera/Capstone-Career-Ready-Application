@@ -13,8 +13,7 @@ class SkillsAssessmentScreen extends StatefulWidget {
   const SkillsAssessmentScreen({super.key});
 
   @override
-  State<SkillsAssessmentScreen> createState() =>
-      _SkillsAssessmentScreenState();
+  State<SkillsAssessmentScreen> createState() => _SkillsAssessmentScreenState();
 }
 
 class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
@@ -24,11 +23,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
       progress: 0.90,
       color: AppColors.primary,
     ),
-    _Skill(
-      label: 'Cloud fundamentals',
-      progress: 0.64,
-      color: AppColors.blue,
-    ),
+    _Skill(label: 'Cloud fundamentals', progress: 0.64, color: AppColors.blue),
     _Skill(
       label: 'Security basics',
       progress: 0.48,
@@ -70,9 +65,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
     if (chosen == null || !mounted) return;
 
     final result = await Navigator.of(context).push<double>(
-      MaterialPageRoute(
-        builder: (_) => SkillsQuizScreen(category: chosen),
-      ),
+      MaterialPageRoute(builder: (_) => SkillsQuizScreen(category: chosen)),
     );
 
     if (result == null || !mounted) return;
@@ -101,12 +94,18 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Skills assessment', style: AppTextStyles.headline),
+                  const Text(
+                    'Skills assessment',
+                    style: AppTextStyles.headline,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -151,12 +150,13 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: skill.progress),
                           duration: const Duration(milliseconds: 500),
-                          builder: (context, value, _) => LinearProgressIndicator(
-                            value: value,
-                            minHeight: 6,
-                            backgroundColor: AppColors.border,
-                            valueColor: AlwaysStoppedAnimation(skill.color),
-                          ),
+                          builder: (context, value, _) =>
+                              LinearProgressIndicator(
+                                value: value,
+                                minHeight: 6,
+                                backgroundColor: AppColors.border,
+                                valueColor: AlwaysStoppedAnimation(skill.color),
+                              ),
                         ),
                       ),
                     ],
