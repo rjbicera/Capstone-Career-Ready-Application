@@ -101,12 +101,18 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Skills assessment', style: AppTextStyles.headline),
+                  const Text(
+                    'Skills assessment',
+                    style: AppTextStyles.headline,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -151,12 +157,13 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: skill.progress),
                           duration: const Duration(milliseconds: 500),
-                          builder: (context, value, _) => LinearProgressIndicator(
-                            value: value,
-                            minHeight: 6,
-                            backgroundColor: AppColors.border,
-                            valueColor: AlwaysStoppedAnimation(skill.color),
-                          ),
+                          builder: (context, value, _) =>
+                              LinearProgressIndicator(
+                                value: value,
+                                minHeight: 6,
+                                backgroundColor: AppColors.border,
+                                valueColor: AlwaysStoppedAnimation(skill.color),
+                              ),
                         ),
                       ),
                     ],
