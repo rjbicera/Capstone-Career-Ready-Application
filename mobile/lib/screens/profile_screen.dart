@@ -72,7 +72,9 @@ class ProfileScreen extends StatelessWidget {
       default:
         return;
     }
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => destination));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => destination),
+    );
   }
 
   void _showHelpSheet(BuildContext context) {
@@ -93,10 +95,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(
-                  Icons.mail_outline_rounded,
-                  color: AppColors.blue,
-                ),
+                leading: const Icon(Icons.mail_outline_rounded, color: AppColors.blue),
                 title: const Text('Contact support'),
                 subtitle: const Text('careerready.support@example.com'),
                 onTap: () {
@@ -115,10 +114,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(
-                  Icons.bug_report_outlined,
-                  color: AppColors.blue,
-                ),
+                leading: const Icon(Icons.bug_report_outlined, color: AppColors.blue),
                 title: const Text('Report a bug'),
                 onTap: () {
                   // TODO: open bug report form.
@@ -156,7 +152,9 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         title: const Text('Log out?'),
         content: const Text('You\'ll need to sign in again to continue.'),
         actions: [
@@ -182,20 +180,20 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _sectionLabel(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 10, top: 18),
-    child: Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
-          letterSpacing: 0.4,
+        padding: const EdgeInsets.only(bottom: 10, top: 18),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textMuted,
+              letterSpacing: 0.4,
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   Widget _statChip(String value, String label) {
     return Expanded(
@@ -250,13 +248,14 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(userName, style: AppTextStyles.title.copyWith(fontSize: 17)),
+              Text(
+                userName,
+                style: AppTextStyles.title.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 2),
               Text(
                 userSubtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
               ),
               const SizedBox(height: 2),
               Text(
@@ -327,9 +326,7 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = action.isDestructive
-        ? AppColors.danger
-        : AppColors.textPrimary;
+    final color = action.isDestructive ? AppColors.danger : AppColors.textPrimary;
 
     return Material(
       color: Colors.white,
