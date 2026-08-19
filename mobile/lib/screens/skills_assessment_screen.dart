@@ -13,8 +13,7 @@ class SkillsAssessmentScreen extends StatefulWidget {
   const SkillsAssessmentScreen({super.key});
 
   @override
-  State<SkillsAssessmentScreen> createState() =>
-      _SkillsAssessmentScreenState();
+  State<SkillsAssessmentScreen> createState() => _SkillsAssessmentScreenState();
 }
 
 class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
@@ -24,11 +23,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
       progress: 0.90,
       color: AppColors.primary,
     ),
-    _Skill(
-      label: 'Cloud fundamentals',
-      progress: 0.64,
-      color: AppColors.blue,
-    ),
+    _Skill(label: 'Cloud fundamentals', progress: 0.64, color: AppColors.blue),
     _Skill(
       label: 'Security basics',
       progress: 0.48,
@@ -70,9 +65,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
     if (chosen == null || !mounted) return;
 
     final result = await Navigator.of(context).push<double>(
-      MaterialPageRoute(
-        builder: (_) => SkillsQuizScreen(category: chosen),
-      ),
+      MaterialPageRoute(builder: (_) => SkillsQuizScreen(category: chosen)),
     );
 
     if (result == null || !mounted) return;

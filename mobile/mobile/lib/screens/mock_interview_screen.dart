@@ -37,7 +37,9 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
   Widget build(BuildContext context) {
     final progress = (_currentQuestion + 1) / _questions.length;
 
-    return SafeArea(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(
@@ -143,6 +145,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
