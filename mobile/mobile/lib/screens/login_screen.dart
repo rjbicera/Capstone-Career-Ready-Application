@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../theme/app_theme.dart';
 import 'main_navigation.dart';
+import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,10 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isSubmitting = false;
   String? _errorText;
 
-  // TEMP: hardcoded test account for development only.
+  // TEMP: hardcoded test accounts for development only.
   // Remove this once Firebase Auth is wired in.
-  static const _tempEmail = 'jenard@gmail.com';
-  static const _tempPassword = '12345678';
+  static const _tempEmail = ['jenard@gmail.com', 'rj@gmail.com', 'jayvee@gmail.com'];
+  static const _tempPassword = ['12345678', '12345678', '12345678'];
 
   @override
   void dispose() {
@@ -39,7 +42,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final isValid = email == _tempEmail && password == _tempPassword;
+
+    bool isValid = false;
+    for (int i = 0; i < _tempEmail.length; i++) {
+      if (email == _tempEmail[i] && password == _tempPassword[i]) {
+        isValid = true;
+        break;
+      }
+    }
 
     if (!mounted) return;
 
@@ -122,7 +132,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // TODO: navigate to forgot-password flow.
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen(),
+                      ),
+                    );
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.blue,
@@ -180,14 +194,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.textSecondary,
                       fontSize: 12.5,
                     ),
-                    children: const [
-                      TextSpan(text: "Don't have an account? "),
+                    children: [
+                      const TextSpan(text: "Don't have an account? "),
                       TextSpan(
                         text: 'Sign up',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                         ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SignUpScreen(),
+                              ),
+                            );
+                          },
                       ),
                     ],
                   ),
