@@ -27,17 +27,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ];
 
   Widget _sectionLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 10, top: 4),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 10, top: 4),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textMuted,
+        letterSpacing: 0.4,
+      ),
+    ),
+  );
 
   Widget _tile({
     required IconData icon,
@@ -120,17 +120,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Text('Language', style: AppTextStyles.title),
               const SizedBox(height: 8),
-              ..._languages.map(
-                (lang) => RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.primary,
-                  title: Text(lang.label),
-                  value: lang.label,
-                  groupValue: _language,
-                  onChanged: (value) {
-                    setState(() => _language = value!);
-                    Navigator.of(sheetContext).pop();
-                  },
+              RadioGroup<String>(
+                groupValue: _language,
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _language = value);
+                  Navigator.of(sheetContext).pop();
+                },
+                child: Column(
+                  children: [
+                    ..._languages.map(
+                      (lang) => RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.primary,
+                        title: Text(lang.label),
+                        value: lang.label,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -146,18 +153,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _isClearingCache = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cache cleared.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Cache cleared.')));
   }
 
   void _handleDeleteAccount() {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete account?'),
         content: const Text(
           'This permanently deletes your profile, resumes, and progress. This cannot be undone.',
@@ -215,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Use fingerprint or face unlock to sign in.',
               trailing: Switch(
                 value: _biometricLogin,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: (v) => setState(() => _biometricLogin = v),
               ),
             ),
@@ -235,7 +240,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Manage what you get notified about.',
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
                 );
               },
             ),
@@ -247,7 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Currently in development.',
               trailing: Switch(
                 value: _darkMode,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: (v) => setState(() => _darkMode = v),
               ),
             ),
@@ -262,7 +269,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _tile(
               icon: Icons.cleaning_services_outlined,
               title: 'Clear cache',
-              subtitle: _isClearingCache ? 'Clearing...' : 'Free up local storage.',
+              subtitle: _isClearingCache
+                  ? 'Clearing...'
+                  : 'Free up local storage.',
               onTap: _isClearingCache ? null : _handleClearCache,
               trailing: _isClearingCache
                   ? const SizedBox(

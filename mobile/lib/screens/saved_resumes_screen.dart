@@ -38,23 +38,23 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
   bool _isUploading = false;
 
   Future<void> _handleUpload() async {
-    FilePickerResult? result;
+    List<PlatformFile> result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn\'t open file picker: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn\'t open file picker: $e')));
       return;
     }
 
-    if (result == null || result.files.isEmpty) return;
+    if (result.isEmpty) return;
 
-    final picked = result.files.single;
+    final picked = result.single;
     setState(() => _isUploading = true);
 
     // TODO: replace with actual upload to your backend + AI scoring call.
@@ -109,7 +109,7 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                 itemCount: _resumes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final resume = _resumes[index];
                   return _ResumeTile(resume: resume);

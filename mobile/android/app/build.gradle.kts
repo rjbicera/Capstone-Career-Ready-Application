@@ -6,9 +6,9 @@ plugins {
 
 android {
     namespace = "com.captone.careerprep.mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36          // was: flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

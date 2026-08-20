@@ -51,24 +51,23 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   ];
 
   Future<void> _handleUpload() async {
-    FilePickerResult? result;
+    List<PlatformFile> result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn\'t open file picker: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn\'t open file picker: $e')));
       return;
     }
 
-    // User backed out of the picker.
-    if (result == null || result.files.isEmpty) return;
+    if (result.isEmpty) return;
 
-    final picked = result.files.single;
+    final picked = result.single;
     setState(() {
       _uploadedFileName = picked.name;
       _isUploading = true;
@@ -153,8 +152,11 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.description_rounded,
-                          size: 18, color: AppColors.primary),
+                      const Icon(
+                        Icons.description_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -172,13 +174,17 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation(AppColors.primary),
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.primary,
+                            ),
                           ),
                         )
                       else
-                        const Icon(Icons.check_circle_rounded,
-                            size: 18, color: AppColors.primary),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
                     ],
                   ),
                 ),
