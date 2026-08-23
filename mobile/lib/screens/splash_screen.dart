@@ -49,10 +49,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 500),
-        pageBuilder: (_, animation, __) => FadeTransition(
-          opacity: animation,
-          child: const OnboardingScreen(),
-        ),
+        pageBuilder: (_, animation, _) =>
+            FadeTransition(opacity: animation, child: const OnboardingScreen()),
       ),
     );
   }
@@ -111,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: LinearProgressIndicator(
                         value: _progress.value,
                         minHeight: 4,
-                        backgroundColor: Colors.white.withOpacity(0.25),
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
                         valueColor: const AlwaysStoppedAnimation(Colors.white),
                       ),
                     ),

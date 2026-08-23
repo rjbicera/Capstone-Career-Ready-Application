@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 import 'resume_analysis_screen.dart';
 
 class SavedResume {
@@ -37,24 +38,38 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
 
   bool _isUploading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Seed AppState with the default active resume so Home's carousel
+    // reflects it on first launch, before any upload happens.
+    if (AppState.instance.resumeScore == null) {
+      final active = _resumes.firstWhere((r) => r.isActive);
+      AppState.instance.setResume(
+        score: active.score,
+        fileName: active.fileName,
+      );
+    }
+  }
+
   Future<void> _handleUpload() async {
-    FilePickerResult? result;
+    List<PlatformFile> result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn\'t open file picker: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn\'t open file picker: $e')));
       return;
     }
 
-    if (result == null || result.files.isEmpty) return;
+    if (result.isEmpty) return;
 
-    final picked = result.files.single;
+    final picked = result.single;
     setState(() => _isUploading = true);
 
     // TODO: replace with actual upload to your backend + AI scoring call.
@@ -109,7 +124,7 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                 itemCount: _resumes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final resume = _resumes[index];
                   return _ResumeTile(resume: resume);

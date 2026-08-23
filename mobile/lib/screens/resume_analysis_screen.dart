@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 
 class _Suggestion {
   const _Suggestion({
@@ -28,6 +29,16 @@ class ResumeAnalysisScreen extends StatefulWidget {
 class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   String? _uploadedFileName;
   bool _isUploading = false;
+  late int _displayScore;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefer whatever is already in shared state (e.g. set by a
+    // previous upload or by Saved Resumes) over the constructor default,
+    // so this screen doesn't show stale data after navigating back to it.
+    _displayScore = AppState.instance.resumeScore ?? widget.score;
+  }
 
   static const _suggestions = [
     _Suggestion(
@@ -51,35 +62,43 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   ];
 
   Future<void> _handleUpload() async {
-    FilePickerResult? result;
+    List<PlatformFile> result;
     try {
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn\'t open file picker: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn\'t open file picker: $e')));
       return;
     }
 
-    // User backed out of the picker.
-    if (result == null || result.files.isEmpty) return;
+    if (result.isEmpty) return;
 
-    final picked = result.files.single;
+    final picked = result.single;
     setState(() {
       _uploadedFileName = picked.name;
       _isUploading = true;
     });
 
     // TODO: replace with actual upload to your backend
-    // (multer endpoint per SDD) + AI analysis call.
+    // (multer endpoint per SDD) + AI analysis call. Score below is a
+    // placeholder stand-in until that endpoint returns a real one.
     await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
-    setState(() => _isUploading = false);
+    const placeholderScore = 78; // TODO: replace with real AI score.
+    setState(() {
+      _isUploading = false;
+      _displayScore = placeholderScore;
+    });
+    AppState.instance.setResume(
+      score: placeholderScore,
+      fileName: picked.name,
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('"$_uploadedFileName" uploaded — analyzing.')),
     );
@@ -118,7 +137,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     const SizedBox(height: 6),
                     Text.rich(
                       TextSpan(
-                        text: '${widget.score}',
+                        text: '$_displayScore',
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
@@ -153,8 +172,11 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.description_rounded,
-                          size: 18, color: AppColors.primary),
+                      const Icon(
+                        Icons.description_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -172,13 +194,17 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation(AppColors.primary),
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.primary,
+                            ),
                           ),
                         )
                       else
-                        const Icon(Icons.check_circle_rounded,
-                            size: 18, color: AppColors.primary),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
                     ],
                   ),
                 ),

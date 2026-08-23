@@ -112,7 +112,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -120,17 +120,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _groupLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 10, top: 4),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 10, top: 4),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textMuted,
+        letterSpacing: 0.4,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
