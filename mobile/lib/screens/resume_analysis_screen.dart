@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 
 class _Suggestion {
   const _Suggestion({
@@ -28,6 +29,16 @@ class ResumeAnalysisScreen extends StatefulWidget {
 class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   String? _uploadedFileName;
   bool _isUploading = false;
+  late int _displayScore;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefer whatever is already in shared state (e.g. set by a
+    // previous upload or by Saved Resumes) over the constructor default,
+    // so this screen doesn't show stale data after navigating back to it.
+    _displayScore = AppState.instance.resumeScore ?? widget.score;
+  }
 
   static const _suggestions = [
     _Suggestion(
@@ -74,11 +85,20 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
     });
 
     // TODO: replace with actual upload to your backend
-    // (multer endpoint per SDD) + AI analysis call.
+    // (multer endpoint per SDD) + AI analysis call. Score below is a
+    // placeholder stand-in until that endpoint returns a real one.
     await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
-    setState(() => _isUploading = false);
+    const placeholderScore = 78; // TODO: replace with real AI score.
+    setState(() {
+      _isUploading = false;
+      _displayScore = placeholderScore;
+    });
+    AppState.instance.setResume(
+      score: placeholderScore,
+      fileName: picked.name,
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('"$_uploadedFileName" uploaded — analyzing.')),
     );
@@ -117,7 +137,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     const SizedBox(height: 6),
                     Text.rich(
                       TextSpan(
-                        text: '${widget.score}',
+                        text: '$_displayScore',
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 import 'skills_quiz_screen.dart';
 
 class _Skill {
@@ -17,19 +18,32 @@ class SkillsAssessmentScreen extends StatefulWidget {
 }
 
 class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
-  final List<_Skill> _skills = [
-    _Skill(
-      label: 'Networking fundamentals',
-      progress: 0.90,
-      color: AppColors.primary,
-    ),
-    _Skill(label: 'Cloud fundamentals', progress: 0.64, color: AppColors.blue),
-    _Skill(
-      label: 'Security basics',
-      progress: 0.48,
-      color: AppColors.textMuted,
-    ),
-  ];
+  late final List<_Skill> _skills;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed from shared state so this screen and Home never disagree
+    // about current skill percentages.
+    final progress = AppState.instance.skillsProgress;
+    _skills = [
+      _Skill(
+        label: 'Networking fundamentals',
+        progress: progress['Networking fundamentals'] ?? 0.90,
+        color: AppColors.primary,
+      ),
+      _Skill(
+        label: 'Cloud fundamentals',
+        progress: progress['Cloud fundamentals'] ?? 0.64,
+        color: AppColors.blue,
+      ),
+      _Skill(
+        label: 'Security basics',
+        progress: progress['Security basics'] ?? 0.48,
+        color: AppColors.textMuted,
+      ),
+    ];
+  }
 
   Future<void> _pickCategory() async {
     final chosen = await showModalBottomSheet<String>(
@@ -74,6 +88,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
       final skill = _skills.firstWhere((s) => s.label == chosen);
       skill.progress = result;
     });
+    AppState.instance.updateSkill(chosen, result);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$chosen updated to ${(result * 100).round()}%.')),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 import 'resume_analysis_screen.dart';
 
 class SavedResume {
@@ -36,6 +37,20 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
   ];
 
   bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed AppState with the default active resume so Home's carousel
+    // reflects it on first launch, before any upload happens.
+    if (AppState.instance.resumeScore == null) {
+      final active = _resumes.firstWhere((r) => r.isActive);
+      AppState.instance.setResume(
+        score: active.score,
+        fileName: active.fileName,
+      );
+    }
+  }
 
   Future<void> _handleUpload() async {
     List<PlatformFile> result;

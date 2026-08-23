@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 import 'skills_assessment_screen.dart';
 
 class MockInterviewScreen extends StatefulWidget {
@@ -31,6 +32,17 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
         _isRecording = false;
       });
     }
+  }
+
+  void _finishInterview() {
+    // Was previously a dead button (onPressed: null on the last
+    // question) — now actually records completion and lets the user
+    // know before sending them back.
+    AppState.instance.recordInterviewCompleted();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Interview session completed.')),
+    );
+    Navigator.of(context).maybePop();
   }
 
   @override
@@ -141,7 +153,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                       ),
                       onPressed: _currentQuestion < _questions.length - 1
                           ? _nextQuestion
-                          : null,
+                          : _finishInterview,
                       child: Text(
                         _currentQuestion < _questions.length - 1
                             ? 'Next question'
