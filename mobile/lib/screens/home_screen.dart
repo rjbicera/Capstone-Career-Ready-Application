@@ -37,43 +37,43 @@ class _HomeScreenState extends State<HomeScreen> {
   int _carouselIndex = 0;
 
   List<_ProgressCard> _buildCards(BuildContext context, AppState state) => [
-        _ProgressCard(
-          icon: Icons.description_rounded,
-          bg: AppColors.primaryLight,
-          accent: AppColors.primary,
-          title: 'Resume analysis',
-          subtitle: state.resumeScore == null
-              ? 'Not analyzed yet'
-              : 'Scored ${state.resumeScore}/100',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ResumeAnalysisScreen(score: state.resumeScore ?? 0),
-            ),
-          ),
+    _ProgressCard(
+      icon: Icons.description_rounded,
+      bg: AppColors.primaryLight,
+      accent: AppColors.primary,
+      title: 'Resume Analysis',
+      subtitle: state.resumeScore == null
+          ? 'Not analyzed yet'
+          : 'Scored ${state.resumeScore}/100',
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ResumeAnalysisScreen(score: state.resumeScore ?? 0),
         ),
-        _ProgressCard(
-          icon: Icons.mic_rounded,
-          bg: AppColors.blueLight,
-          accent: AppColors.blue,
-          title: 'Mock interview',
-          subtitle: state.interviewsCompleted == 0
-              ? 'Not started'
-              : '${state.interviewsCompleted} session${state.interviewsCompleted == 1 ? '' : 's'} completed',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const MockInterviewScreen()),
-          ),
-        ),
-        _ProgressCard(
-          icon: Icons.bar_chart_rounded,
-          bg: AppColors.primaryLight,
-          accent: AppColors.primary,
-          title: 'Skills assessment',
-          subtitle: '${(state.skillsAverage * 100).round()}% complete',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SkillsAssessmentScreen()),
-          ),
-        ),
-      ];
+      ),
+    ),
+    _ProgressCard(
+      icon: Icons.mic_rounded,
+      bg: AppColors.blueLight,
+      accent: AppColors.blue,
+      title: 'Mock interview',
+      subtitle: state.interviewsCompleted == 0
+          ? 'Not started'
+          : '${state.interviewsCompleted} session${state.interviewsCompleted == 1 ? '' : 's'} completed',
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const MockInterviewScreen())),
+    ),
+    _ProgressCard(
+      icon: Icons.bar_chart_rounded,
+      bg: AppColors.primaryLight,
+      accent: AppColors.primary,
+      title: 'Skills assessment',
+      subtitle: '${(state.skillsAverage * 100).round()}% complete',
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const SkillsAssessmentScreen())),
+    ),
+  ];
 
   @override
   void dispose() {
@@ -152,14 +152,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: state.overallReadiness),
                           duration: const Duration(milliseconds: 500),
-                          builder: (context, value, _) => CircularProgressIndicator(
-                            value: value,
-                            strokeWidth: 6,
-                            backgroundColor: AppColors.border,
-                            valueColor: const AlwaysStoppedAnimation(
-                              AppColors.primary,
-                            ),
-                          ),
+                          builder: (context, value, _) =>
+                              CircularProgressIndicator(
+                                value: value,
+                                strokeWidth: 6,
+                                backgroundColor: AppColors.border,
+                                valueColor: const AlwaysStoppedAnimation(
+                                  AppColors.primary,
+                                ),
+                              ),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -230,7 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: card.bg,
-                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.card,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
