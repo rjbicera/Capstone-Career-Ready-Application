@@ -8,10 +8,10 @@ class LogoMark extends StatelessWidget {
   const LogoMark({
     super.key,
     this.size = 72,
-    this.strokeColor = const Color(0xFF0F6E56),
-    this.sealColor = const Color(0xFF185FA5),
-    this.ribbonColor = const Color(0xFF185FA5),
-    this.dotColor = const Color(0xFF1D9E75),
+    this.strokeColor = const Color(0xFF6678EF),
+    this.sealColor = const Color(0xFF6F78D8),
+    this.ribbonColor = const Color(0xFF6F78D8),
+    this.dotColor = const Color(0xFF8E98FF),
     this.checkColor = Colors.white,
   });
 
@@ -25,11 +25,11 @@ class LogoMark extends StatelessWidget {
   /// Convenience constructor for placing the mark on a dark/colored
   /// background (splash screen), matching the white-on-teal app icon.
   const LogoMark.onColor({super.key, this.size = 72})
-      : strokeColor = Colors.white,
-        sealColor = const Color(0xFF185FA5),
-        ribbonColor = const Color(0xFFB5D4F4),
-        dotColor = const Color(0xFFB5D4F4),
-        checkColor = Colors.white;
+    : strokeColor = Colors.white,
+      sealColor = const Color(0xFF6F78D8),
+      ribbonColor = const Color(0xFFC9D2FF),
+      dotColor = const Color(0xFFC9D2FF),
+      checkColor = Colors.white;
 
   @override
   Widget build(BuildContext context) {

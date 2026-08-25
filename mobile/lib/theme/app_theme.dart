@@ -6,23 +6,25 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF0F6E56); // teal
-  static const Color primaryLight = Color(0xFFE1F5EE);
-  static const Color accent = Color(0xFF1D9E75); // lighter teal accent
+  // Pastel indigo, lavender and blush are adapted from the resume-analyzer
+  // reference artwork. Keep functional state colors distinct and accessible.
+  static const Color primary = Color(0xFF6678EF);
+  static const Color primaryLight = Color(0xFFE9ECFF);
+  static const Color accent = Color(0xFF8E98FF);
 
-  static const Color blue = Color(0xFF185FA5);
-  static const Color blueLight = Color(0xFFE6F1FB);
-  static const Color blueSoft = Color(0xFFB5D4F4);
+  static const Color blue = Color(0xFF6F78D8);
+  static const Color blueLight = Color(0xFFF0F4FF);
+  static const Color blueSoft = Color(0xFFC9D2FF);
 
-  static const Color background = Color(0xFFF6F7F5);
+  static const Color background = Colors.transparent;
   static const Color card = Colors.white;
 
-  static const Color textPrimary = Color(0xFF20211F);
-  static const Color textSecondary = Color(0xFF63665F);
-  static const Color textMuted = Color(0xFF9A9C94);
+  static const Color textPrimary = Color(0xFF1E1B22);
+  static const Color textSecondary = Color(0xFF475467);
+  static const Color textMuted = Color(0xFF667085);
 
-  static const Color border = Color(0xFFE7E8E2);
-  static const Color danger = Color(0xFFE24B4A);
+  static const Color border = Color(0xFFE4E7EC);
+  static const Color danger = Color(0xFFD95D79);
 }
 
 class AppRadius {
@@ -69,7 +71,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Inter',
+      fontFamily: 'Mona Sans',
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
@@ -82,12 +84,9 @@ class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.button),
+            borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           elevation: 0,
         ),
       ),
@@ -97,19 +96,18 @@ class AppTheme {
           minimumSize: const Size.fromHeight(50),
           side: const BorderSide(color: AppColors.border, width: 1.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.button),
+            borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.field),
           borderSide: const BorderSide(color: AppColors.border),

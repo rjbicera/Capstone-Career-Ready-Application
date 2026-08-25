@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_background.dart';
 import 'main_navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -73,136 +74,147 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-          child: Form(
-            key: _formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(height: 12),
-                const Text('Create your account', style: AppTextStyles.headline),
-                const SizedBox(height: 6),
-                const Text(
-                  'Start prepping for the career you want',
-                  style: AppTextStyles.body,
-                ),
-                const SizedBox(height: 28),
-
-                const Text('Full name', style: AppTextStyles.caption),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(hintText: 'Jenard Reyes'),
-                  validator: _validateName,
-                ),
-                const SizedBox(height: 16),
-
-                const Text('Email', style: AppTextStyles.caption),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(hintText: 'jenard@gmail.com'),
-                  validator: _validateEmail,
-                ),
-                const SizedBox(height: 16),
-
-                const Text('Password', style: AppTextStyles.caption),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    hintText: 'At least 8 characters',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: AppColors.textMuted,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        type: AppBackgroundType.auth,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
                     ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  validator: _validatePassword,
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Create your account',
+                    style: AppTextStyles.headline,
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Start prepping for the career you want',
+                    style: AppTextStyles.body,
+                  ),
+                  const SizedBox(height: 28),
 
-                const Text('Confirm password', style: AppTextStyles.caption),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _confirmController,
-                  obscureText: _obscureConfirm,
-                  decoration: InputDecoration(
-                    hintText: 'Re-enter your password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: AppColors.textMuted,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscureConfirm = !_obscureConfirm);
-                      },
+                  const Text('Full name', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(hintText: 'Jenard Reyes'),
+                    validator: _validateName,
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Email', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'jenard@gmail.com',
                     ),
+                    validator: _validateEmail,
                   ),
-                  validator: _validateConfirm,
-                ),
-                const SizedBox(height: 26),
+                  const SizedBox(height: 16),
 
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _handleSignUp,
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Text('Create account'),
-                ),
-                const SizedBox(height: 20),
-
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12.5,
-                      ),
-                      children: [
-                        const TextSpan(text: 'Already have an account? '),
-                        TextSpan(
-                          text: 'Sign in',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          recognizer: (TapGestureRecognizer()
-                            ..onTap = () => Navigator.of(context).maybePop()),
+                  const Text('Password', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      hintText: 'At least 8 characters',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.textMuted,
+                          size: 20,
                         ),
-                      ],
+                        onPressed: () {
+                          setState(() => _obscurePassword = !_obscurePassword);
+                        },
+                      ),
+                    ),
+                    validator: _validatePassword,
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Confirm password', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _confirmController,
+                    obscureText: _obscureConfirm,
+                    decoration: InputDecoration(
+                      hintText: 'Re-enter your password',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.textMuted,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          setState(() => _obscureConfirm = !_obscureConfirm);
+                        },
+                      ),
+                    ),
+                    validator: _validateConfirm,
+                  ),
+                  const SizedBox(height: 26),
+
+                  ElevatedButton(
+                    onPressed: _isSubmitting ? null : _handleSignUp,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Text('Create account'),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Center(
+                    child: RichText(
+                      text: TextSpan(
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12.5,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Already have an account? '),
+                          TextSpan(
+                            text: 'Sign in',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            recognizer: (TapGestureRecognizer()
+                              ..onTap = () => Navigator.of(context).maybePop()),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
