@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logo_mark.dart';
+import '../widgets/app_background.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -64,14 +65,8 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.blue],
-          ),
-        ),
+      body: AppBackground(
+        type: AppBackgroundType.main,
         child: SafeArea(
           child: Column(
             children: [
@@ -80,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
                 opacity: _fade,
                 child: ScaleTransition(
                   scale: Tween(begin: 0.85, end: 1.0).animate(_fade),
-                  child: const LogoMark.onColor(size: 84),
+                  child: const LogoMark(size: 84),
                 ),
               ),
               const SizedBox(height: 18),
@@ -89,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: const Text(
                   'career ready',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
@@ -109,8 +104,10 @@ class _SplashScreenState extends State<SplashScreen>
                       child: LinearProgressIndicator(
                         value: _progress.value,
                         minHeight: 4,
-                        backgroundColor: Colors.white.withValues(alpha: 0.25),
-                        valueColor: const AlwaysStoppedAnimation(Colors.white),
+                        backgroundColor: Colors.white.withValues(alpha: 0.65),
+                        valueColor: const AlwaysStoppedAnimation(
+                          AppColors.primary,
+                        ),
                       ),
                     ),
                   );
