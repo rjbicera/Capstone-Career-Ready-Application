@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -13,6 +14,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isSubmitting = false;
   bool _isSent = false;
+  String? _errorText;
 
   static final _emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[a-zA-Z]{2,}$');
 
@@ -32,9 +34,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleSendLink() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
-    // TODO: replace with Firebase Auth sendPasswordResetEmail call.
-    await Future.delayed(const Duration(milliseconds: 800));
+    setState(() {
+      _isSubmitting = true;
+      _errorText = null;
+    });
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      // Deliberately show the "check your inbox" success state even for
+      // 'user-not-found' — confirming which emails have accounts is an
+      // enumeration risk, same reasoning as the login screen's generic
+      // "incorrect email or password" message.
+      if (e.code != 'user-not-found') {
+        setState(() {
+          _isSubmitting = false;
+          _errorText = e.message ?? 'Something went wrong. Please try again.';
+        });
+        return;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorText = 'Something went wrong. Please try again.';
+      });
+      return;
+    }
+
     if (!mounted) return;
     setState(() {
       _isSubmitting = false;
@@ -80,13 +110,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration:
-                            const InputDecoration(hintText: 'jenard@gmail.com'),
+                        decoration: const InputDecoration(
+                          hintText: 'jenard@gmail.com',
+                        ),
                         validator: _validateEmail,
                       ),
                     ],
                   ),
                 ),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorText!,
+                    style: const TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 26),
 
                 ElevatedButton(
