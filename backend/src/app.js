@@ -12,8 +12,9 @@ app.use(morgan("dev"));
 
 app.get("/api/v1/health", (req, res) => res.json({ status: "ok" }));
 
-// Mount route files as each module owner builds them, e.g.:
-// app.use("/api/v1/auth", require("./routes/authRoutes"));
+app.use("/api/v1/auth", require("./routes/authRoutes"));
+
+// Mount remaining route files as each module owner builds them, e.g.:
 // app.use("/api/v1/profile", require("./routes/profileRoutes"));
 // app.use("/api/v1/resumes", require("./routes/resumeRoutes"));
 // app.use("/api/v1/interview", require("./routes/interviewRoutes"));

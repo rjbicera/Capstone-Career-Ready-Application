@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_background.dart';
+import '../services/auth_api_service.dart';
 import 'main_navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -17,10 +19,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _courseController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isSubmitting = false;
+  String? _submitError;
+
+  // Matches the yearLevel values a student would actually pick from —
+  // kept as plain strings since the backend/contract just wants a string,
+  // not an enum.
+  static const _yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  String? _yearLevel;
 
   static final _emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[a-zA-Z]{2,}$');
 
@@ -30,6 +40,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _courseController.dispose();
     super.dispose();
   }
 
@@ -56,12 +67,95 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return null;
   }
 
+  String? _validateCourse(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Enter your course.';
+    return null;
+  }
+
+  /// Maps the backend's documented error codes (docs/api/api-contract.md)
+  /// to user-facing messages. Falls back to the message the backend sent
+  /// for anything not explicitly handled here.
+  String _messageForApiError(ApiException e) {
+    switch (e.code) {
+      case 'EMAIL_IN_USE':
+        return 'An account with this email already exists.';
+      case 'WEAK_PASSWORD':
+        return 'Choose a stronger password.';
+      case 'VALIDATION_ERROR':
+        return e.message;
+      default:
+        return e.message;
+    }
+  }
+
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_yearLevel == null) {
+      setState(() => _submitError = 'Select your year level.');
+      return;
+    }
 
-    setState(() => _isSubmitting = true);
-    // TODO: replace with your Firebase Auth createUserWithEmailAndPassword call.
-    await Future.delayed(const Duration(milliseconds: 800));
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    try {
+      // Step 1: backend creates the Firebase Auth user AND the Firestore
+      // users/{uid} doc together (see backend/src/controllers/authController.js).
+      await AuthApiService.register(
+        email: email,
+        password: password,
+        fullName: _nameController.text.trim(),
+        course: _courseController.text.trim(),
+        yearLevel: _yearLevel!,
+      );
+
+      // Step 2: the backend created the account but never established a
+      // client session (Admin SDK can't do that) — sign in from the
+      // client with the same credentials to get a real Firebase ID
+      // token for subsequent authenticated requests.
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = _messageForApiError(e);
+      });
+      return;
+    } on NetworkException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = e.message;
+      });
+      return;
+    } on FirebaseAuthException catch (_) {
+      // Registration succeeded but the immediate sign-in failed — rare,
+      // but send them to Login rather than stranding them on a broken
+      // sign-up screen, since the account genuinely was created.
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created — please sign in.')),
+      );
+      Navigator.of(context).maybePop();
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = 'Something went wrong. Please try again.';
+      });
+      return;
+    }
+
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 
@@ -122,9 +216,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      hintText: 'jenard@gmail.com',
+                      hintText: 'you@email.com',
                     ),
                     validator: _validateEmail,
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Course', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _courseController,
+                    decoration: const InputDecoration(hintText: 'BSIT'),
+                    validator: _validateCourse,
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Year level', style: AppTextStyles.caption),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: _yearLevel,
+                    decoration: const InputDecoration(
+                      hintText: 'Select year level',
+                    ),
+                    items: _yearLevels
+                        .map((y) => DropdownMenuItem(value: y, child: Text(y)))
+                        .toList(),
+                    onChanged: (value) => setState(() => _yearLevel = value),
                   ),
                   const SizedBox(height: 16),
 
@@ -174,6 +291,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: _validateConfirm,
                   ),
+
+                  if (_submitError != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      _submitError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 26),
 
                   ElevatedButton(
