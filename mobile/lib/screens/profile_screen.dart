@@ -5,6 +5,7 @@ import 'edit_profile_screen.dart';
 import 'saved_resumes_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
+import '../services/auth_api_service.dart';
 
 class _MenuAction {
   const _MenuAction({
@@ -165,9 +166,13 @@ class ProfileScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(dialogContext).pop();
-              // TODO: call your Firebase Auth signOut() here.
+              // Without this, the Firebase ID token stays valid and
+              // /auth/me-style authenticated requests would keep working
+              // even after the user is dropped back on the login screen.
+              await AuthApiService.signOut();
+              if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,

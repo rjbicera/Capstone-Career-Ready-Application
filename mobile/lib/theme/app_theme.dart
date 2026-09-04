@@ -122,6 +122,30 @@ class AppTheme {
         ),
         hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
       ),
+      // `colorScheme.surface` above is intentionally transparent so the
+      // AppBackground gradient shows through the Scaffold body. But
+      // several Material components (dropdown menus, popup menus,
+      // dialogs) also paint their own background from colorScheme.surface
+      // by default — so that same transparency was leaking into them,
+      // making their popups render see-through over whatever content sits
+      // underneath instead of as an opaque card (e.g. the year-level
+      // dropdown on the sign-up screen, and the logout confirmation
+      // dialog on profile). Pin these back to an opaque white explicitly.
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.card),
+        ),
+      ),
+      popupMenuTheme: const PopupMenuThemeData(color: AppColors.card),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+      ),
+      canvasColor: AppColors.card,
     );
   }
 }

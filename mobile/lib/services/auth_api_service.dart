@@ -1,95 +1,204 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
-/// Thrown when the backend responds with its documented
-/// { error: { code, message } } shape. The `code` matches
-/// docs/api/api-contract.md exactly (e.g. EMAIL_IN_USE, WEAK_PASSWORD,
-/// VALIDATION_ERROR) so callers can branch on it if needed, while
-/// `message` is already human-readable for direct display.
 class ApiException implements Exception {
-  ApiException(this.code, this.message);
-  final String code;
   final String message;
+  final String? code;
+  final int? statusCode;
+
+  ApiException(this.message, {this.code, this.statusCode});
 
   @override
-  String toString() => 'ApiException($code): $message';
+  String toString() {
+    if (code != null) {
+      return 'ApiException($code): $message';
+    }
+    return 'ApiException: $message';
+  }
 }
 
-/// Thrown for anything that isn't a structured API error — no
-/// connection, DNS failure, timeout, etc. Kept separate from
-/// ApiException so the UI can show a distinct "check your connection"
-/// message instead of a made-up error code.
 class NetworkException implements Exception {
-  NetworkException(this.message);
   final String message;
+
+  NetworkException(this.message);
 
   @override
   String toString() => 'NetworkException: $message';
 }
 
 class AuthApiService {
-  AuthApiService._();
+  // ============================================================
+  // CONFIGURATION
+  // ============================================================
 
-  // TODO: point this at your deployed backend URL once one exists.
-  //
-  // For LOCAL development against `npm run dev` on your machine:
-  //  - Android EMULATOR:  http://10.0.2.2:<port>  (10.0.2.2 is the
-  //    emulator's special alias for the host machine's localhost —
-  //    "localhost" from inside the emulator refers to the emulator
-  //    itself, not your computer, which is the #1 cause of this kind
-  //    of call silently timing out).
-  //  - Physical PHONE on the same Wi-Fi: http://<your-computer's-LAN-IP>:<port>
-  //    (e.g. http://192.168.1.23:4000) — find it via `ipconfig` on
-  //    Windows (look for IPv4 Address).
-  //  - iOS simulator: http://localhost:<port> works fine, unlike Android.
   static const String baseUrl = 'http://10.0.2.2:4000/api/v1';
+
+  // IMPORTANT:
+  // Use ONE shared GoogleSignIn instance throughout the app.
+  static final GoogleSignIn googleSignIn = GoogleSignIn(
+    scopes: const ['email'],
+  );
+
+  // ============================================================
+  // LOGOUT
+  // ============================================================
+
+  /// Signs the user out from both Firebase and Google.
+  ///
+  /// Firebase signOut() alone can leave the Google Sign-In session
+  /// cached. Signing out from both allows another Google account
+  /// to be selected the next time the user signs in.
+  static Future<void> signOut() async {
+    try {
+      // First sign out from Firebase.
+      await FirebaseAuth.instance.signOut();
+
+      // Then clear the Google Sign-In session.
+      await googleSignIn.signOut();
+    } catch (e) {
+      throw ApiException(
+        'Unable to sign out. Please try again.',
+        code: 'SIGN_OUT_FAILED',
+      );
+    }
+  }
+
+  // ============================================================
+  // REGISTER WITH EMAIL AND PASSWORD
+  // ============================================================
 
   static Future<Map<String, dynamic>> register({
     required String email,
     required String password,
     required String fullName,
-    required String course,
-    required String yearLevel,
   }) async {
-    final uri = Uri.parse('$baseUrl/auth/register');
-
-    http.Response response;
     try {
-      response = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'email': email,
-              'password': password,
-              'fullName': fullName,
-              'course': course,
-              'yearLevel': yearLevel,
-            }),
-          )
-          .timeout(const Duration(seconds: 15));
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+          'fullName': fullName,
+        }),
+      );
+
+      return _handleResponse(response);
     } on SocketException {
       throw NetworkException(
-        'Couldn\'t reach the server. Check your connection or that the backend is running.',
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
       );
-    } on http.ClientException {
-      throw NetworkException('Couldn\'t reach the server.');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // GET CURRENT USER PROFILE
+  // ============================================================
+
+  static Future<Map<String, dynamic>> me({required String idToken}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: {
+          'Authorization': 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // UPDATE DEMOGRAPHIC PROFILE
+  // ============================================================
+
+  static Future<Map<String, dynamic>> updateDemographics({
+    required String idToken,
+    required String course,
+    required String yearLevel,
+    String? gender,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: {
+          'Authorization': 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'course': course,
+          'yearLevel': yearLevel,
+          'gender': gender,
+        }),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // RESPONSE HANDLER
+  // ============================================================
+
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    Map<String, dynamic> body = {};
+
+    if (response.body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(response.body);
+
+        if (decoded is Map<String, dynamic>) {
+          body = decoded;
+        }
+      } catch (_) {
+        // Ignore JSON parsing errors here and handle below.
+      }
     }
 
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-
-    if (response.statusCode == 201) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }
 
-    // Matches the { error: { code, message } } shape from
-    // docs/api/api-contract.md's global error format.
-    final error = body['error'] as Map<String, dynamic>?;
-    throw ApiException(
-      error?['code'] as String? ?? 'UNKNOWN_ERROR',
-      error?['message'] as String? ?? 'Something went wrong.',
-    );
+    final error = body['error'];
+
+    String message = 'Something went wrong.';
+    String? code;
+
+    if (error is Map<String, dynamic>) {
+      message = error['message']?.toString() ?? message;
+      code = error['code']?.toString();
+    } else if (body['message'] != null) {
+      message = body['message'].toString();
+    }
+
+    throw ApiException(message, code: code, statusCode: response.statusCode);
   }
 }

@@ -1,7 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_background.dart';
+import '../services/auth_api_service.dart';
+import 'demographic_profile_screen.dart';
 import 'main_navigation.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -18,16 +21,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isSubmitting = false;
+  bool _isGoogleSubmitting = false;
   String? _errorText;
 
-  // TEMP: hardcoded test accounts for development only.
-  // Remove this once Firebase Auth is wired in.
-  static const _tempEmail = [
-    'jenard@gmail.com',
-    'rj@gmail.com',
-    'jayvee@gmail.com',
-  ];
-  static const _tempPassword = ['12345678', '12345678', '12345678'];
+  final _googleSignIn = AuthApiService.googleSignIn;
 
   @override
   void dispose() {
@@ -36,41 +33,205 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Maps FirebaseAuth's error codes to user-facing copy. Deliberately
+  /// vague on which of email/password is wrong (avoids leaking which
+  /// emails have accounts), consistent with the security policy already
+  /// referenced elsewhere in this codebase (see authMiddleware.js).
+  String _messageForAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
+
+      case 'invalid-email':
+        return 'Enter a valid email address.';
+
+      case 'user-disabled':
+        return 'This account has been disabled.';
+
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
+
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with this email using another sign-in method.';
+
+      case 'network-request-failed':
+        return 'Network error. Check your internet connection and try again.';
+
+      case 'popup-closed-by-user':
+      case 'cancelled-popup-request':
+        return 'Google sign-in was cancelled.';
+
+      default:
+        return e.message ?? 'Something went wrong. Please try again.';
+    }
+  }
+
+  /// Shared by both sign-in paths (email/password and Google) once
+  /// FirebaseAuth has a session — decides whether this account still
+  /// needs the demographic-profiling step (SDD v1.6) before landing on
+  /// the main app.
+  ///
+  /// A brand-new Google account has no users/{uid} doc at all yet (GET
+  /// /auth/me 404s USER_NOT_FOUND), and a plain email account always has
+  /// one but may have profileComplete: false if this is its first
+  /// sign-in after registering. Both cases route to
+  /// DemographicProfileScreen; anything else goes straight to the app.
+  ///
+  /// If the backend can't be reached, this deliberately still lets the
+  /// user into the app rather than stranding them on the login screen —
+  /// they'll just get asked for demographics next time it succeeds.
+  Future<void> _routeAfterSignIn() async {
+    if (!mounted) return;
+
+    Widget destination = const MainNavigation();
+    try {
+      final idToken = await FirebaseAuth.instance.currentUser!.getIdToken();
+      final me = await AuthApiService.me(idToken: idToken!);
+      if (me['profileComplete'] != true) {
+        destination = const DemographicProfileScreen();
+      }
+    } on ApiException catch (e) {
+      if (e.code == 'USER_NOT_FOUND') {
+        destination = const DemographicProfileScreen();
+      }
+      // Any other API error: fall through to MainNavigation rather than
+      // blocking sign-in on a profile-completeness check.
+    } catch (_) {
+      // Network/unexpected error — same reasoning as above.
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => destination),
+      (route) => false,
+    );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_isSubmitting || _isGoogleSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isGoogleSubmitting = true;
+      _errorText = null;
+    });
+
+    try {
+      final googleUser = await _googleSignIn.signIn();
+
+      // User closed the Google account picker.
+      if (googleUser == null) {
+        if (mounted) {
+          setState(() {
+            _isGoogleSubmitting = false;
+          });
+        }
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+
+      if (googleAuth.idToken == null && googleAuth.accessToken == null) {
+        throw FirebaseAuthException(
+          code: 'google-no-token',
+          message: 'Google did not return a valid sign-in token.',
+        );
+      }
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Firebase handles both cases:
+      //
+      // Existing Google account:
+      //     sign in
+      //
+      // New Google account:
+      //     create account + sign in
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('GOOGLE FIREBASE ERROR: ${e.code}');
+      debugPrint('GOOGLE FIREBASE MESSAGE: ${e.message}');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isGoogleSubmitting = false;
+        _errorText = _messageForAuthError(e);
+      });
+
+      return;
+    } catch (e) {
+      debugPrint('GOOGLE SIGN-IN ERROR: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isGoogleSubmitting = false;
+        _errorText = 'Google sign-in failed. Please try again.';
+      });
+
+      return;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isGoogleSubmitting = false;
+    });
+
+    await _routeAfterSignIn();
+  }
+
   Future<void> _handleSignIn() async {
     setState(() {
       _isSubmitting = true;
       _errorText = null;
     });
 
-    // TODO: replace this whole block with your Firebase Auth sign-in call.
-    await Future.delayed(const Duration(milliseconds: 600));
-
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    bool isValid = false;
-    for (int i = 0; i < _tempEmail.length; i++) {
-      if (email == _tempEmail[i] && password == _tempPassword[i]) {
-        isValid = true;
-        break;
-      }
-    }
-
-    if (!mounted) return;
-
-    if (!isValid) {
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
         _isSubmitting = false;
-        _errorText = 'Incorrect email or password.';
+        _errorText = 'Enter your email and password.';
       });
       return;
     }
 
+    try {
+      // Same Firebase project signup_screen.dart registers into — the
+      // register endpoint creates the account server-side, this call
+      // just establishes the client session against it.
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorText = _messageForAuthError(e);
+      });
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorText = 'Something went wrong. Please try again.';
+      });
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => _isSubmitting = false);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MainNavigation()),
-      (route) => false,
-    );
+    await _routeAfterSignIn();
   }
 
   @override
@@ -98,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    hintText: 'jenard@gmail.com',
+                    hintText: 'Username or email address',
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -163,7 +324,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 12),
 
                 ElevatedButton(
-                  onPressed: _isSubmitting ? null : _handleSignIn,
+                  onPressed: (_isSubmitting || _isGoogleSubmitting)
+                      ? null
+                      : _handleSignIn,
                   child: _isSubmitting
                       ? const SizedBox(
                           height: 20,
@@ -190,10 +353,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
 
                 OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: wire up Google sign-in.
-                  },
-                  icon: const Icon(Icons.g_mobiledata, size: 22),
+                  onPressed: (_isSubmitting || _isGoogleSubmitting)
+                      ? null
+                      : _handleGoogleSignIn,
+                  icon: _isGoogleSubmitting
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.g_mobiledata, size: 22),
                   label: const Text('Continue with Google'),
                 ),
                 const SizedBox(height: 24),
