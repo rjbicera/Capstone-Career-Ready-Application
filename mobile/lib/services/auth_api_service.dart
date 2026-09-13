@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -108,10 +108,7 @@ class AuthApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/auth/me'),
-        headers: {
-          'Authorization': 'Bearer $idToken',
-          'Content-Type': 'application/json',
-        },
+        headers: await _securityHeaders(idToken: idToken),
       );
 
       return _handleResponse(response);
@@ -140,10 +137,7 @@ class AuthApiService {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/auth/me'),
-        headers: {
-          'Authorization': 'Bearer $idToken',
-          'Content-Type': 'application/json',
-        },
+        headers: await _securityHeaders(idToken: idToken),
         body: jsonEncode({
           'course': course,
           'yearLevel': yearLevel,
@@ -200,5 +194,21 @@ class AuthApiService {
     }
 
     throw ApiException(message, code: code, statusCode: response.statusCode);
+  }
+
+  static Future<Map<String, String>> _securityHeaders({String? idToken}) async {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+
+    if (idToken != null && idToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $idToken';
+    }
+
+    final appCheckToken = await FirebaseAppCheck.instance.getToken();
+
+    if (appCheckToken != null && appCheckToken.isNotEmpty) {
+      headers['X-Firebase-AppCheck'] = appCheckToken;
+    }
+
+    return headers;
   }
 }
