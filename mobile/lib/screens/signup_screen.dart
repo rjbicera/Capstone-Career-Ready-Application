@@ -476,7 +476,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(hintText: 'Jenard Reyes'),
+                    decoration: const InputDecoration(hintText: 'User Name'),
                     validator: _validateName,
                   ),
 
