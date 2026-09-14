@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_api_service.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_background.dart';
 import 'main_navigation.dart';
@@ -16,10 +17,12 @@ class DemographicProfileScreen extends StatefulWidget {
 
 class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _genderController = TextEditingController();
+  final _nicknameController = TextEditingController();
+  final _customGenderController = TextEditingController();
 
   String? _course;
   String? _yearLevel;
+  String? _gender;
 
   bool _isSubmitting = false;
   String? _errorText;
@@ -31,9 +34,27 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
     '4th Year',
   ];
 
+  // Inclusive gender options, including LGBTQ+ identities. "Prefer to
+  // self-describe" reveals a free-text field so nobody is limited to
+  // this fixed list.
+  static const String _selfDescribeOption = 'Prefer to self-describe';
+  static const List<String> _genderOptions = [
+    'Woman',
+    'Man',
+    'Non-binary',
+    'Transgender woman',
+    'Transgender man',
+    'Genderqueer',
+    'Genderfluid',
+    'Agender',
+    _selfDescribeOption,
+    'Prefer not to say',
+  ];
+
   @override
   void dispose() {
-    _genderController.dispose();
+    _nicknameController.dispose();
+    _customGenderController.dispose();
     super.dispose();
   }
 
@@ -78,19 +99,35 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
         throw FirebaseAuthException(code: 'invalid-id-token');
       }
 
+      // Resolve the gender value actually sent to the backend: the
+      // custom text when "Prefer to self-describe" is chosen, the
+      // picked option otherwise.
+      String? genderToSend;
+      if (_gender == _selfDescribeOption) {
+        final custom = _customGenderController.text.trim();
+        genderToSend = custom.isEmpty ? null : custom;
+      } else {
+        genderToSend = _gender;
+      }
+
       // Save demographic information to the backend.
-      await AuthApiService.updateDemographics(
+      final result = await AuthApiService.updateDemographics(
         idToken: idToken,
         course: _course!,
         yearLevel: _yearLevel!,
-        gender: _genderController.text.trim().isEmpty
+        gender: genderToSend,
+        nickname: _nicknameController.text.trim().isEmpty
             ? null
-            : _genderController.text.trim(),
+            : _nicknameController.text.trim(),
       );
 
       if (!mounted) {
         return;
       }
+
+      // Make the nickname (and everything else) available immediately
+      // to Home/Profile without another round trip.
+      AppState.instance.loadProfile(result);
 
       // Profile is complete.
       // Remove previous screens and enter the main application.
@@ -248,6 +285,31 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                   const SizedBox(height: 32),
 
+                  const Text('Nickname', style: AppTextStyles.caption),
+
+                  const SizedBox(height: 6),
+
+                  TextFormField(
+                    controller: _nicknameController,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      hintText: 'What should we call you?',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Optional. We\'ll use this to greet you around the app instead of your full name.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 10.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   const Text('Program', style: AppTextStyles.caption),
 
                   const SizedBox(height: 8),
@@ -310,14 +372,41 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                   const SizedBox(height: 6),
 
-                  TextFormField(
-                    controller: _genderController,
-                    textCapitalization: TextCapitalization.words,
+                  DropdownButtonFormField<String>(
+                    initialValue: _gender,
+                    dropdownColor: AppColors.card,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       hintText: 'Optional',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
+                    items: _genderOptions.map((option) {
+                      return DropdownMenuItem<String>(
+                        value: option,
+                        child: Text(option, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: _isSubmitting
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _gender = value;
+                              _errorText = null;
+                            });
+                          },
                   ),
+
+                  if (_gender == _selfDescribeOption) ...[
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _customGenderController,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        hintText: 'Tell us how you identify',
+                        prefixIcon: Icon(Icons.edit_outlined),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 8),
 

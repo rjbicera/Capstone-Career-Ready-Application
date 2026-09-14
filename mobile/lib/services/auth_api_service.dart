@@ -133,6 +133,7 @@ class AuthApiService {
     required String course,
     required String yearLevel,
     String? gender,
+    String? nickname,
   }) async {
     try {
       final response = await http.patch(
@@ -142,7 +143,52 @@ class AuthApiService {
           'course': course,
           'yearLevel': yearLevel,
           'gender': gender,
+          'nickname': nickname,
         }),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // UPDATE PROFILE (Edit profile screen — partial update, any time)
+  // ============================================================
+
+  /// Only non-null fields are sent, so callers can pass just the
+  /// field(s) that changed. Returns the full updated profile.
+  static Future<Map<String, dynamic>> updateProfile({
+    required String idToken,
+    String? fullName,
+    String? nickname,
+    String? careerGoal,
+    String? course,
+    String? yearLevel,
+    String? gender,
+  }) async {
+    final body = <String, dynamic>{
+      if (fullName != null) 'fullName': fullName,
+      if (nickname != null) 'nickname': nickname,
+      if (careerGoal != null) 'careerGoal': careerGoal,
+      if (course != null) 'course': course,
+      if (yearLevel != null) 'yearLevel': yearLevel,
+      if (gender != null) 'gender': gender,
+    };
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/auth/me/profile'),
+        headers: await _securityHeaders(idToken: idToken),
+        body: jsonEncode(body),
       );
 
       return _handleResponse(response);

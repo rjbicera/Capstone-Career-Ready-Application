@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../state/app_state.dart';
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_resumes_screen.dart';
@@ -20,22 +21,7 @@ class _MenuAction {
 }
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({
-    super.key,
-    this.userName = 'Jenard Reyes',
-    this.userSubtitle = 'BSIT · Networking track',
-    this.memberSince = 'Member since Aug 2026',
-    this.resumesCount = 1,
-    this.interviewsCount = 2,
-    this.skillsTracked = 3,
-  });
-
-  final String userName;
-  final String userSubtitle;
-  final String memberSince;
-  final int resumesCount;
-  final int interviewsCount;
-  final int skillsTracked;
+  const ProfileScreen({super.key});
 
   static const _accountActions = [
     _MenuAction(icon: Icons.edit_outlined, label: 'Edit profile'),
@@ -172,6 +158,9 @@ class ProfileScreen extends StatelessWidget {
               // /auth/me-style authenticated requests would keep working
               // even after the user is dropped back on the login screen.
               await AuthApiService.signOut();
+              // Drop the previous user's profile so it can't flash on
+              // screen for whoever signs in next on this device.
+              AppState.instance.clearProfile();
               if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -233,93 +222,124 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  String _memberSinceLabel(String? isoDate) {
+    if (isoDate == null) return 'Member';
+    final parsed = DateTime.tryParse(isoDate);
+    if (parsed == null) return 'Member';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return 'Member since ${months[parsed.month - 1]} ${parsed.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 34,
-                backgroundColor: AppColors.blueLight,
-                child: Text(
-                  userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    color: AppColors.blue,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(userName, style: AppTextStyles.title.copyWith(fontSize: 17)),
-              const SizedBox(height: 2),
-              Text(
-                userSubtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                memberSince,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textMuted,
-                  fontSize: 10.5,
-                ),
-              ),
-              const SizedBox(height: 18),
+    // Rebuilds whenever AppState changes — e.g. right after Edit
+    // profile saves — so this screen always reflects the signed-in
+    // user instead of a fixed placeholder.
+    return ListenableBuilder(
+      listenable: AppState.instance,
+      builder: (context, _) {
+        final state = AppState.instance;
+        final userName = state.fullName ?? state.displayName;
+        final resumesCount = state.resumeFileName != null ? 1 : 0;
+        final interviewsCount = state.interviewsCompleted;
+        final skillsTracked = state.skillsProgress.length;
 
-              // Quick stats — gives Profile a functional summary role,
-              // not just a settings menu.
-              Row(
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Column(
                 children: [
-                  _statChip('$resumesCount', 'Resumes'),
-                  const SizedBox(width: 8),
-                  _statChip('$interviewsCount', 'Interviews'),
-                  const SizedBox(width: 8),
-                  _statChip('$skillsTracked', 'Skills tracked'),
+                  CircleAvatar(
+                    radius: 34,
+                    backgroundColor: AppColors.blueLight,
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: AppColors.blue,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    userName,
+                    style: AppTextStyles.title.copyWith(fontSize: 17),
+                  ),
+                  const SizedBox(height: 2),
+                  // "BSIT · Cloud Engineer" — pulled from this user's
+                  // own course and career goal, not a shared default.
+                  Text(
+                    state.courseAndGoalSubtitle,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _memberSinceLabel(state.memberSince),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 10.5,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Quick stats — gives Profile a functional summary role,
+                  // not just a settings menu. Numbers now come from this
+                  // user's actual activity in AppState.
+                  Row(
+                    children: [
+                      _statChip('$resumesCount', 'Resumes'),
+                      const SizedBox(width: 8),
+                      _statChip('$interviewsCount', 'Interviews'),
+                      const SizedBox(width: 8),
+                      _statChip('$skillsTracked', 'Skills tracked'),
+                    ],
+                  ),
+
+                  _sectionLabel('ACCOUNT'),
+                  ..._accountActions.map(
+                    (action) => Padding(
+                      padding: const EdgeInsets.only(bottom: 9),
+                      child: _MenuTile(
+                        action: action,
+                        onTap: () => _handleMenuTap(context, action.label),
+                      ),
+                    ),
+                  ),
+
+                  _sectionLabel('SUPPORT'),
+                  ..._supportActions.map(
+                    (action) => Padding(
+                      padding: const EdgeInsets.only(bottom: 9),
+                      child: _MenuTile(
+                        action: action,
+                        onTap: () => _handleMenuTap(context, action.label),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 9),
+                  _MenuTile(
+                    action: const _MenuAction(
+                      icon: Icons.logout_rounded,
+                      label: 'Log out',
+                      isDestructive: true,
+                    ),
+                    onTap: () => _handleLogout(context),
+                  ),
                 ],
               ),
-
-              _sectionLabel('ACCOUNT'),
-              ..._accountActions.map(
-                (action) => Padding(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  child: _MenuTile(
-                    action: action,
-                    onTap: () => _handleMenuTap(context, action.label),
-                  ),
-                ),
-              ),
-
-              _sectionLabel('SUPPORT'),
-              ..._supportActions.map(
-                (action) => Padding(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  child: _MenuTile(
-                    action: action,
-                    onTap: () => _handleMenuTap(context, action.label),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 9),
-              _MenuTile(
-                action: const _MenuAction(
-                  icon: Icons.logout_rounded,
-                  label: 'Log out',
-                  isDestructive: true,
-                ),
-                onTap: () => _handleLogout(context),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

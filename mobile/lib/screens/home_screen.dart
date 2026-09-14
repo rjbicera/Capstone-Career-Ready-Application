@@ -25,9 +25,7 @@ class _ProgressCard {
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.userName = 'Jenard'});
-
-  final String userName;
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -93,12 +91,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Rebuilds automatically whenever any screen calls a setter on
     // AppState.instance (resume upload, interview finished, skill
-    // updated) — no manual refresh or navigation callback needed.
+    // updated, profile edited) — no manual refresh or navigation
+    // callback needed. This is also what makes the greeting below
+    // pick up nickname changes made on the Edit profile screen.
     return ListenableBuilder(
       listenable: AppState.instance,
       builder: (context, _) {
         final state = AppState.instance;
         final cards = _buildCards(context, state);
+        final displayName = state.displayName;
 
         return AppBackground(
           type: AppBackgroundType.main,
@@ -108,7 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Greeting row
+                  // Greeting row — name shown here is the user's
+                  // nickname when they've set one, falling back to
+                  // their first name.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -116,15 +119,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(_greeting, style: AppTextStyles.caption),
-                          Text(widget.userName, style: AppTextStyles.title),
+                          Text(displayName, style: AppTextStyles.title),
                         ],
                       ),
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: AppColors.blueLight,
                         child: Text(
-                          widget.userName.isNotEmpty
-                              ? widget.userName[0].toUpperCase()
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
                             color: AppColors.blue,

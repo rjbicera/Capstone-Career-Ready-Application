@@ -19,6 +19,13 @@ const registerSchema = z.object({
   yearLevel: z.string().trim().min(1).optional(),
 });
 
+// Gender is intentionally free-text on the backend (not an enum) so the
+// mobile dropdown can offer an inclusive list of options — including
+// LGBTQ+ identities and a "prefer to self-describe" custom entry — without
+// the server needing to know every label the client shows. Nothing here
+// branches on the value; see gender note in firestore-schema-design.md.
+const genderField = z.string().trim().min(1).optional();
+
 // PATCH /auth/me — the demographic-profiling step. `course` is
 // specifically constrained to BSIT/BSBA (not free text like the old
 // signup field was) because it's the variable the whole app branches
@@ -31,9 +38,25 @@ const demographicsSchema = z.object({
   yearLevel: z.enum(["1st Year", "2nd Year", "3rd Year", "4th Year"], {
     error: "Select a valid year level",
   }),
-  // Optional and free-text on purpose — see gender note in
-  // firestore-schema-design.md. Not used for any branching logic.
-  gender: z.string().trim().min(1).optional(),
+  gender: genderField,
+  // Optional. Shown around the app (home greeting, profile header)
+  // instead of the full legal name whenever it's set.
+  nickname: z.string().trim().min(1).optional(),
 });
 
-module.exports = { registerSchema, demographicsSchema };
+// PATCH /auth/me/profile — general "Edit profile" updates, made any time
+// after onboarding. Every field is optional since this is a partial
+// update; at least one must be present (enforced in the controller so we
+// can return a clear error message rather than a generic schema issue).
+const profileUpdateSchema = z.object({
+  fullName: z.string().trim().min(1).optional(),
+  nickname: z.string().trim().min(1).optional(),
+  careerGoal: z.string().trim().min(1).optional(),
+  course: z.enum(["BSIT", "BSBA"]).optional(),
+  yearLevel: z
+    .enum(["1st Year", "2nd Year", "3rd Year", "4th Year"])
+    .optional(),
+  gender: genderField,
+});
+
+module.exports = { registerSchema, demographicsSchema, profileUpdateSchema };

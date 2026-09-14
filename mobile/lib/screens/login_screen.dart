@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_background.dart';
 import '../services/auth_api_service.dart';
+import '../state/app_state.dart';
 
 import 'demographic_profile_screen.dart';
 import 'main_navigation.dart';
@@ -105,6 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Ask the Career Ready backend about this Firebase user.
       final profile = await AuthApiService.me(idToken: idToken);
+
+      // Make name/nickname/course etc. available to Home and Profile
+      // right away, whether or not demographics are complete yet.
+      AppState.instance.loadProfile(profile);
 
       final profileComplete = profile['profileComplete'] == true;
 

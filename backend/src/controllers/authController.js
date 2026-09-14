@@ -3,7 +3,32 @@ const { auth, db } = require("../config/firebaseAdmin");
 const {
   registerSchema,
   demographicsSchema,
+  profileUpdateSchema,
 } = require("../validators/authValidators");
+
+// Shape returned to the client for /auth/me, PATCH /auth/me, and
+// PATCH /auth/me/profile — kept in one place so the three endpoints
+// never drift out of sync with each other.
+function serializeUser(data) {
+  return {
+    uid: data.uid,
+
+    fullName: data.fullName,
+    nickname: data.nickname ?? null,
+    email: data.email,
+    role: data.role,
+
+    course: data.course ?? null,
+    yearLevel: data.yearLevel ?? null,
+    gender: data.gender ?? null,
+    careerGoal: data.careerGoal ?? null,
+
+    profileComplete: data.profileComplete === true,
+
+    createdAt: data.createdAt?.toDate?.().toISOString() ?? null,
+    updatedAt: data.updatedAt?.toDate?.().toISOString() ?? null,
+  };
+}
 
 // ------------------------------------------------------------
 // POST /api/v1/auth/register
@@ -62,6 +87,7 @@ async function register(req, res) {
   const userDoc = {
     uid: userRecord.uid,
     fullName,
+    nickname: null,
     email,
 
     role: "student",
@@ -69,6 +95,7 @@ async function register(req, res) {
     course: null,
     yearLevel: null,
     gender: null,
+    careerGoal: null,
 
     profileComplete: false,
 
@@ -121,6 +148,7 @@ async function me(req, res) {
         firebaseUser.displayName ||
         firebaseUser.email?.split("@")[0] ||
         "Student",
+      nickname: null,
 
       email: firebaseUser.email || null,
 
@@ -129,6 +157,7 @@ async function me(req, res) {
       course: null,
       yearLevel: null,
       gender: null,
+      careerGoal: null,
 
       profileComplete: false,
 
@@ -141,33 +170,13 @@ async function me(req, res) {
     doc = await userRef.get();
   }
 
-  const data = doc.data();
-
-  return res.status(200).json({
-    uid: data.uid,
-
-    fullName: data.fullName,
-    email: data.email,
-    role: data.role,
-
-    course: data.course ?? null,
-
-    yearLevel: data.yearLevel ?? null,
-
-    gender: data.gender ?? null,
-
-    profileComplete: data.profileComplete === true,
-
-    createdAt: data.createdAt?.toDate?.().toISOString() ?? null,
-
-    updatedAt: data.updatedAt?.toDate?.().toISOString() ?? null,
-  });
+  return res.status(200).json(serializeUser(doc.data()));
 }
 
 // ------------------------------------------------------------
 // PATCH /api/v1/auth/me
 //
-// Saves demographic profile.
+// Saves demographic profile (one-time onboarding step).
 // ------------------------------------------------------------
 
 async function updateDemographics(req, res) {
@@ -183,7 +192,7 @@ async function updateDemographics(req, res) {
     });
   }
 
-  const { course, yearLevel, gender } = parsed.data;
+  const { course, yearLevel, gender, nickname } = parsed.data;
 
   const userRef = db.collection("users").doc(req.uid);
 
@@ -203,6 +212,7 @@ async function updateDemographics(req, res) {
     yearLevel,
 
     gender: gender !== undefined ? gender : null,
+    nickname: nickname !== undefined ? nickname : null,
 
     profileComplete: true,
 
@@ -211,31 +221,66 @@ async function updateDemographics(req, res) {
 
   const updatedDoc = await userRef.get();
 
-  const data = updatedDoc.data();
+  return res.status(200).json(serializeUser(updatedDoc.data()));
+}
 
-  return res.status(200).json({
-    uid: data.uid,
+// ------------------------------------------------------------
+// PATCH /api/v1/auth/me/profile
+//
+// General "Edit profile" updates, made any time after onboarding.
+// Unlike updateDemographics, every field is optional — only the
+// fields the caller actually sends get written.
+// ------------------------------------------------------------
 
-    fullName: data.fullName,
-    email: data.email,
-    role: data.role,
+async function updateProfile(req, res) {
+  const parsed = profileUpdateSchema.safeParse(req.body);
 
-    course: data.course ?? null,
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: parsed.error.issues[0]?.message || "Invalid profile update.",
+      },
+    });
+  }
 
-    yearLevel: data.yearLevel ?? null,
+  const updates = parsed.data;
 
-    gender: data.gender ?? null,
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Provide at least one field to update.",
+      },
+    });
+  }
 
-    profileComplete: data.profileComplete === true,
+  const userRef = db.collection("users").doc(req.uid);
 
-    createdAt: data.createdAt?.toDate?.().toISOString() ?? null,
+  const userDoc = await userRef.get();
 
-    updatedAt: data.updatedAt?.toDate?.().toISOString() ?? null,
+  if (!userDoc.exists) {
+    return res.status(404).json({
+      error: {
+        code: "USER_NOT_FOUND",
+        message: "No profile found for this account.",
+      },
+    });
+  }
+
+  await userRef.update({
+    ...updates,
+    updatedAt: new Date(),
   });
+
+  const updatedDoc = await userRef.get();
+
+  return res.status(200).json(serializeUser(updatedDoc.data()));
 }
 
 module.exports = {
   register,
   me,
   updateDemographics,
+  updateProfile,
 };
