@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
+import 'change_password_screen.dart';
 
 class _LanguageOption {
   const _LanguageOption(this.code, this.label);
@@ -211,7 +212,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.lock_outline_rounded,
               title: 'Change password',
               onTap: () {
-                // TODO: navigate to change-password flow.
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ChangePasswordScreen(),
+                  ),
+                );
               },
             ),
             _tile(

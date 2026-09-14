@@ -35,7 +35,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? _submitError;
 
-  static final _emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[a-zA-Z]{2,}$');
+  static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   @override
   void dispose() {
