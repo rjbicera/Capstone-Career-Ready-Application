@@ -24,24 +24,19 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
   void initState() {
     super.initState();
     // Seed from shared state so this screen and Home never disagree
-    // about current skill percentages.
+    // about current skill percentages. Categories are course-aware
+    // (BSIT vs BSBA) — see AppState.skillCategoriesForCourse.
+    AppState.instance.ensureDefaultSkillsSeeded();
     final progress = AppState.instance.skillsProgress;
+    final categories = AppState.instance.skillCategoriesForCourse;
+    const colors = [AppColors.primary, AppColors.blue, AppColors.textMuted];
     _skills = [
-      _Skill(
-        label: 'Networking fundamentals',
-        progress: progress['Networking fundamentals'] ?? 0.90,
-        color: AppColors.primary,
-      ),
-      _Skill(
-        label: 'Cloud fundamentals',
-        progress: progress['Cloud fundamentals'] ?? 0.64,
-        color: AppColors.blue,
-      ),
-      _Skill(
-        label: 'Security basics',
-        progress: progress['Security basics'] ?? 0.48,
-        color: AppColors.textMuted,
-      ),
+      for (var i = 0; i < categories.length; i++)
+        _Skill(
+          label: categories[i],
+          progress: progress[categories[i]] ?? 0.0,
+          color: colors[i % colors.length],
+        ),
     ];
   }
 

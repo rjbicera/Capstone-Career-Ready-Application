@@ -55,6 +55,10 @@ class AppState extends ChangeNotifier {
     careerGoal = null;
     photoUrl = null;
     memberSince = null;
+    // Skill category keys are course-specific (BSIT vs BSBA) — clear
+    // them on sign-out too, or a different course's categories on the
+    // next login would sit alongside stale ones from this session.
+    skillsProgress.clear();
     notifyListeners();
   }
 
@@ -102,11 +106,49 @@ class AppState extends ChangeNotifier {
   }
 
   // ---- Skills assessment ----
-  final Map<String, double> skillsProgress = {
-    'Networking fundamentals': 0.90,
-    'Cloud fundamentals': 0.64,
-    'Security basics': 0.48,
-  };
+  // Kept empty until [ensureDefaultSkillsSeeded] fills it in based on
+  // [course], so BSIT and BSBA users never share default category keys.
+  final Map<String, double> skillsProgress = {};
+
+  /// Course-appropriate category list for the skills assessment screen
+  /// and the quiz question bank. BSIT keeps the original IT-flavored
+  /// categories; BSBA gets a business/management-flavored set. Defaults
+  /// to the BSIT set if course hasn't been set yet (e.g. mid-onboarding).
+  List<String> get skillCategoriesForCourse {
+    if (course == 'BSBA') {
+      return const [
+        'Financial fundamentals',
+        'Marketing fundamentals',
+        'Management basics',
+      ];
+    }
+    return const [
+      'Networking fundamentals',
+      'Cloud fundamentals',
+      'Security basics',
+    ];
+  }
+
+  /// Seeds [skillsProgress] with placeholder values for the current
+  /// course the first time it's needed (e.g. on first visit to the
+  /// skills assessment screen), so the progress bars have something to
+  /// show before the user has taken any quiz. No-op if already seeded.
+  void ensureDefaultSkillsSeeded() {
+    if (skillsProgress.isNotEmpty) return;
+    if (course == 'BSBA') {
+      skillsProgress.addAll({
+        'Financial fundamentals': 0.72,
+        'Marketing fundamentals': 0.58,
+        'Management basics': 0.45,
+      });
+    } else {
+      skillsProgress.addAll({
+        'Networking fundamentals': 0.90,
+        'Cloud fundamentals': 0.64,
+        'Security basics': 0.48,
+      });
+    }
+  }
 
   void updateSkill(String category, double progress) {
     skillsProgress[category] = progress;

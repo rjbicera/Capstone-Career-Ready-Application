@@ -11,19 +11,43 @@ class MockInterviewScreen extends StatefulWidget {
 }
 
 class _MockInterviewScreenState extends State<MockInterviewScreen> {
-  static const _questions = [
-    'Tell me about a time you solved a difficult technical problem.',
-    'Why do you want to work in networking or cloud infrastructure?',
+  // Shared across both programs — general behavioral questions that
+  // don't depend on the candidate's field.
+  static const _sharedQuestions = [
     'Describe a project where you worked as part of a team.',
-    'How do you stay updated with new technology?',
     'What is a weakness you\'re actively working on?',
     'Tell me about a time you had to learn something quickly.',
     'Where do you see yourself in the next few years?',
     'Do you have any questions for us?',
   ];
 
+  static const _bsitQuestions = [
+    'Tell me about a time you solved a difficult technical problem.',
+    'Why do you want to work in networking or cloud infrastructure?',
+    'How do you stay updated with new technology?',
+  ];
+
+  static const _bsbaQuestions = [
+    'Tell me about a time you had to persuade a client or stakeholder.',
+    'Why do you want to work in business or management?',
+    'How do you stay updated on market and industry trends?',
+  ];
+
+  late final List<String> _questions;
+
   int _currentQuestion = 0;
   bool _isRecording = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final courseQuestions = AppState.instance.course == 'BSBA'
+        ? _bsbaQuestions
+        : _bsitQuestions;
+    // Interleave course-specific questions first, then the shared set,
+    // mirroring the original ordering (field-specific up front).
+    _questions = [...courseQuestions, ..._sharedQuestions];
+  }
 
   void _nextQuestion() {
     if (_currentQuestion < _questions.length - 1) {
@@ -57,6 +81,22 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Same rule as Resume Analysis: only show a back button
+              // when this screen was pushed on top of something (from
+              // Home's dashboard card) — hidden on the bottom-nav tab.
+              if (Navigator.of(context).canPop()) ...[
+                IconButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: AppColors.textPrimary,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(height: 8),
+              ],
               const Text('Mock interview', style: AppTextStyles.headline),
               const SizedBox(height: 4),
               Text(

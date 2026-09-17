@@ -41,8 +41,10 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
     _displayScore = AppState.instance.resumeScore ?? widget.score;
   }
 
-  static const _suggestions = [
-    _Suggestion(
+  // Formatting/Clarity tips are field-agnostic; the Keywords tip is the
+  // one that should actually differ by program.
+  List<_Suggestion> get _suggestions => [
+    const _Suggestion(
       badgeLabel: 'Formatting',
       badgeColor: AppColors.blue,
       badgeBg: AppColors.blueLight,
@@ -52,9 +54,11 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
       badgeLabel: 'Keywords',
       badgeColor: AppColors.primary,
       badgeBg: AppColors.primaryLight,
-      text: 'Add "cloud infrastructure" to match target roles.',
+      text: AppState.instance.course == 'BSBA'
+          ? 'Add "stakeholder management" to match target roles.'
+          : 'Add "cloud infrastructure" to match target roles.',
     ),
-    _Suggestion(
+    const _Suggestion(
       badgeLabel: 'Clarity',
       badgeColor: AppColors.blue,
       badgeBg: AppColors.blueLight,
@@ -114,6 +118,23 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Only shown when this screen was pushed on top of the
+                // dashboard (e.g. tapping the Resume Analysis card on
+                // Home) — hidden when it's showing as the bottom-nav
+                // tab, since there's nothing to pop back to there.
+                if (Navigator.of(context).canPop()) ...[
+                  IconButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                      color: AppColors.textPrimary,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 const _GradientHeading('Smart feedback for your dream job'),
                 const SizedBox(height: 8),
                 const Center(

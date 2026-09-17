@@ -15,6 +15,12 @@ class _Question {
 
 /// Question banks are intentionally small/illustrative — swap these
 /// for a Firestore-backed question set once the backend module is ready.
+///
+/// Two separate banks (BSIT-flavored and BSBA-flavored) share this map,
+/// keyed by category label. SkillsQuizScreen just looks up whatever
+/// category it was given, so which bank a question comes from follows
+/// automatically from AppState.skillCategoriesForCourse — no course
+/// check needed here.
 const Map<String, List<_Question>> _questionBanks = {
   'Networking fundamentals': [
     _Question(
@@ -133,6 +139,137 @@ const Map<String, List<_Question>> _questionBanks = {
         'Encrypted transport via TLS/SSL',
         'Automatic caching',
         'Larger request limits',
+      ],
+      correctIndex: 1,
+    ),
+  ],
+  'Financial fundamentals': [
+    _Question(
+      text: 'Which financial statement shows a company\'s revenues and expenses over a period?',
+      options: ['Balance sheet', 'Income statement', 'Cash flow statement', 'Statement of equity'],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'What does ROI stand for?',
+      options: [
+        'Rate of interest',
+        'Return on investment',
+        'Revenue over income',
+        'Ratio of inventory',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'In accounting, what does the term "liquidity" refer to?',
+      options: [
+        'A company\'s total assets',
+        'How quickly an asset can be converted to cash',
+        'The interest rate on a loan',
+        'Total shareholder equity',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'What is a break-even point?',
+      options: [
+        'When profit is at its highest',
+        'When total revenue equals total costs',
+        'When a company takes on debt',
+        'When inventory runs out',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'Which of these is considered a fixed cost?',
+      options: ['Raw materials', 'Sales commissions', 'Monthly rent', 'Shipping fees'],
+      correctIndex: 2,
+    ),
+  ],
+  'Marketing fundamentals': [
+    _Question(
+      text: 'What do the "4 Ps" of the marketing mix stand for?',
+      options: [
+        'Price, Product, Promotion, Place',
+        'Plan, Produce, Price, Profit',
+        'Product, People, Process, Physical evidence',
+        'Promotion, Position, Price, People',
+      ],
+      correctIndex: 0,
+    ),
+    _Question(
+      text: 'What is a target market?',
+      options: [
+        'Every possible customer',
+        'A specific group of consumers a product is aimed at',
+        'A company\'s competitors',
+        'The total sales revenue goal',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'What does "brand equity" refer to?',
+      options: [
+        'The stock price of a company',
+        'The value a brand adds beyond the product itself',
+        'A company\'s marketing budget',
+        'The legal ownership of a trademark',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'Which metric measures how many people took a desired action after seeing an ad?',
+      options: ['Reach', 'Impressions', 'Conversion rate', 'Bounce rate'],
+      correctIndex: 2,
+    ),
+    _Question(
+      text: 'What is market segmentation?',
+      options: [
+        'Dividing a market into distinct groups of buyers',
+        'Setting a single price for all products',
+        'Merging two competing companies',
+        'Reducing production costs',
+      ],
+      correctIndex: 0,
+    ),
+  ],
+  'Management basics': [
+    _Question(
+      text: 'Which of these is one of the four classic functions of management?',
+      options: ['Auditing', 'Organizing', 'Investing', 'Forecasting only'],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'What is the main purpose of a SWOT analysis?',
+      options: [
+        'To calculate quarterly profit',
+        'To assess strengths, weaknesses, opportunities, and threats',
+        'To schedule employee shifts',
+        'To audit financial statements',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'What does "span of control" refer to in an organization?',
+      options: [
+        'A manager\'s total salary',
+        'The number of employees a manager directly supervises',
+        'The size of a company\'s market',
+        'The number of departments in a company',
+      ],
+      correctIndex: 1,
+    ),
+    _Question(
+      text: 'Which leadership style involves making decisions with little input from the team?',
+      options: ['Democratic', 'Laissez-faire', 'Autocratic', 'Transformational'],
+      correctIndex: 2,
+    ),
+    _Question(
+      text: 'What is the primary goal of performance management?',
+      options: [
+        'Reducing headcount',
+        'Improving employee and organizational performance',
+        'Increasing office space',
+        'Automating payroll',
       ],
       correctIndex: 1,
     ),
