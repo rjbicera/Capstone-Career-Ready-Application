@@ -57,6 +57,12 @@ const profileUpdateSchema = z.object({
     .enum(["1st Year", "2nd Year", "3rd Year", "4th Year"])
     .optional(),
   gender: genderField,
+  // Firebase Storage download URL for the profile picture, set after
+  // the mobile app uploads the image directly to Storage. The backend
+  // never touches the image bytes themselves — just this URL string.
+  // An empty string is allowed and means "remove my photo"; the
+  // controller normalizes it to null before writing.
+  photoUrl: z.union([z.string().trim().url(), z.literal("")]).optional(),
 });
 
 module.exports = { registerSchema, demographicsSchema, profileUpdateSchema };

@@ -257,14 +257,21 @@ class ProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 34,
                     backgroundColor: AppColors.blueLight,
-                    child: Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        color: AppColors.blue,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 24,
-                      ),
-                    ),
+                    backgroundImage: state.photoUrl != null
+                        ? NetworkImage(state.photoUrl!)
+                        : null,
+                    child: state.photoUrl == null
+                        ? Text(
+                            userName.isNotEmpty
+                                ? userName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              color: AppColors.blue,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 24,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   Text(

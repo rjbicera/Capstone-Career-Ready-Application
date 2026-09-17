@@ -11,6 +11,7 @@ import 'demographic_profile_screen.dart';
 import 'main_navigation.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
+import 'set_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isSubmitting = false;
   bool _isGoogleSubmitting = false;
+  bool _isNewGoogleUser = false;
 
   String? _errorText;
 
@@ -214,7 +216,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Firebase signs in an existing Google account or creates
       // a new Firebase account if this Google account is new.
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      _isNewGoogleUser = userCredential.additionalUserInfo?.isNewUser ?? false;
     } on FirebaseAuthException catch (e) {
       debugPrint('GOOGLE FIREBASE ERROR: ${e.code}');
       debugPrint('GOOGLE FIREBASE MESSAGE: ${e.message}');
@@ -245,6 +250,17 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isGoogleSubmitting = false;
     });
+
+    // Brand-new Google account — offer to attach a password before
+    // continuing, so they aren't locked into Google-only sign-in.
+    // Skippable; either way we fall through to the same routing.
+    if (_isNewGoogleUser) {
+      _isNewGoogleUser = false;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const SetPasswordScreen()));
+      if (!mounted) return;
+    }
 
     // IMPORTANT:
     // Both Google Login and Google Signup must eventually

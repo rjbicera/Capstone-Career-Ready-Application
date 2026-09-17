@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../state/app_state.dart';
 import '../services/auth_api_service.dart';
+import '../services/profile_photo_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -22,7 +26,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _gender;
 
   bool _isSaving = false;
+  bool _isUploadingPhoto = false;
   String? _errorText;
+
+  // Locally picked image, shown immediately while the upload runs so
+  // the avatar doesn't sit blank waiting on the network.
+  File? _pickedPhoto;
+  String? _photoUrl;
 
   static const List<String> _courses = ['BSIT', 'BSBA'];
   static const List<String> _yearLevels = [
@@ -58,6 +68,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nicknameController = TextEditingController(text: state.nickname ?? '');
     _careerGoalController =
         TextEditingController(text: state.careerGoal ?? '');
+    _photoUrl = state.photoUrl;
     _course = _courses.contains(state.course) ? state.course : null;
     _yearLevel = _yearLevels.contains(state.yearLevel) ? state.yearLevel : null;
 
@@ -166,6 +177,126 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _handlePhotoTap() async {
+    if (_isUploadingPhoto) return;
+
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.of(sheetContext).pop('gallery'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.of(sheetContext).pop('camera'),
+            ),
+            if (_photoUrl != null || _pickedPhoto != null)
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.danger,
+                ),
+                title: const Text(
+                  'Remove photo',
+                  style: TextStyle(color: AppColors.danger),
+                ),
+                onTap: () => Navigator.of(sheetContext).pop('remove'),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    if (source == 'remove') {
+      await _removePhoto();
+      return;
+    }
+
+    try {
+      final file = await ProfilePhotoService.pickImage(
+        source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+      );
+      if (file == null || !mounted) return;
+
+      setState(() {
+        _pickedPhoto = file;
+        _isUploadingPhoto = true;
+      });
+
+      // Upload to Storage, then persist the resulting URL through the
+      // normal profile endpoint so it survives a reinstall.
+      final url = await ProfilePhotoService.uploadPhoto(file);
+      await _persistPhotoUrl(url);
+
+      if (!mounted) return;
+      setState(() {
+        _photoUrl = url;
+        _isUploadingPhoto = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _pickedPhoto = null;
+        _isUploadingPhoto = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not upload that photo.')),
+      );
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    setState(() => _isUploadingPhoto = true);
+    try {
+      await ProfilePhotoService.deletePhoto();
+      await _persistPhotoUrl('');
+      if (!mounted) return;
+      setState(() {
+        _photoUrl = null;
+        _pickedPhoto = null;
+        _isUploadingPhoto = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isUploadingPhoto = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not remove that photo.')),
+      );
+    }
+  }
+
+  /// Saves the photo URL immediately rather than waiting for "Save
+  /// changes" — the image is already uploaded at this point, so the
+  /// two would otherwise fall out of sync if the user backed out.
+  Future<void> _persistPhotoUrl(String url) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final idToken = await user.getIdToken();
+    if (idToken == null || idToken.isEmpty) return;
+
+    final result = await AuthApiService.updateProfile(
+      idToken: idToken,
+      // Empty string is meaningful here — it tells the backend to
+      // clear the photo, whereas null would just omit the field.
+      photoUrl: url,
+    );
+    AppState.instance.loadProfile(result);
+  }
+
   Widget _field({
     required String label,
     required TextEditingController controller,
@@ -256,22 +387,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: AppColors.blueLight,
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          color: AppColors.blue,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 28,
+                      backgroundImage: _pickedPhoto != null
+                          ? FileImage(_pickedPhoto!)
+                          : (_photoUrl != null
+                                ? NetworkImage(_photoUrl!) as ImageProvider
+                                : null),
+                      child: (_pickedPhoto == null && _photoUrl == null)
+                          ? Text(
+                              initial,
+                              style: const TextStyle(
+                                color: AppColors.blue,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 28,
+                              ),
+                            )
+                          : null,
+                    ),
+                    if (_isUploadingPhoto)
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation(
+                                  Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: () {
-                          // TODO: open image picker for a new profile photo.
-                        },
+                        onTap: _handlePhotoTap,
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(

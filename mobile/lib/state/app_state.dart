@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
   String? yearLevel;
   String? gender;
   String? careerGoal;
+  String? photoUrl;
   String? memberSince; // ISO createdAt from the backend
 
   /// Populate the profile fields from a /auth/me, PATCH /auth/me, or
@@ -37,6 +38,7 @@ class AppState extends ChangeNotifier {
     yearLevel = data['yearLevel'] as String?;
     gender = data['gender'] as String?;
     careerGoal = data['careerGoal'] as String?;
+    photoUrl = data['photoUrl'] as String?;
     memberSince = data['createdAt'] as String?;
     notifyListeners();
   }
@@ -51,6 +53,7 @@ class AppState extends ChangeNotifier {
     yearLevel = null;
     gender = null;
     careerGoal = null;
+    photoUrl = null;
     memberSince = null;
     notifyListeners();
   }

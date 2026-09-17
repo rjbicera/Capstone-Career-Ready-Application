@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Career Ready uses your camera so you can take a profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Career Ready needs access to your photos so you can choose a profile picture.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Career Ready uses Face ID to unlock the app.</string>
 </dict>
 </plist>

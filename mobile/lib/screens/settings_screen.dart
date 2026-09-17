@@ -1,7 +1,22 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../services/auth_api_service.dart';
+import '../services/biometric_service.dart';
+import '../services/reauth_helper.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import 'notifications_screen.dart';
+import 'change_email_screen.dart';
 import 'change_password_screen.dart';
+import 'legal_document_screen.dart';
+import 'login_screen.dart';
+import 'notifications_screen.dart';
+import 'set_password_screen.dart';
 
 class _LanguageOption {
   const _LanguageOption(this.code, this.label);
@@ -19,13 +34,48 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _darkMode = false;
   bool _biometricLogin = false;
+  BiometricCheckResult _biometricStatus = const BiometricCheckResult(
+    BiometricStatus.error,
+  );
   String _language = 'English';
   bool _isClearingCache = false;
+  bool _isExporting = false;
+  bool _isDeleting = false;
 
   static const _languages = [
     _LanguageOption('en', 'English'),
     _LanguageOption('fil', 'Filipino'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBiometricState();
+  }
+
+  Future<void> _loadBiometricState() async {
+    final status = await BiometricService.checkStatus();
+    final enabled = await BiometricService.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _biometricStatus = status;
+      _biometricLogin = enabled && status.isAvailable;
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Which sign-in providers are linked to this account. Used to
+  // hide password-only options from Google-only users (they have no
+  // password to change) and to label the Linked accounts row.
+  // ------------------------------------------------------------
+  Set<String> get _providers =>
+      FirebaseAuth.instance.currentUser?.providerData
+          .map((p) => p.providerId)
+          .toSet() ??
+      <String>{};
+
+  bool get _hasPassword => _providers.contains('password');
+  bool get _hasGoogle => _providers.contains('google.com');
 
   Widget _sectionLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 10, top: 4),
@@ -148,46 +198,346 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _handleClearCache() async {
-    setState(() => _isClearingCache = true);
-    // TODO: clear cached images / local resume drafts / offline data.
-    await Future.delayed(const Duration(milliseconds: 700));
+  // ------------------------------------------------------------
+  // Biometric login
+  // ------------------------------------------------------------
+
+  Future<void> _handleBiometricToggle(bool value) async {
+    if (!value) {
+      await BiometricService.setEnabled(false);
+      if (!mounted) return;
+      setState(() => _biometricLogin = false);
+      return;
+    }
+
+    // Re-check right before prompting — status can change between
+    // opening Settings and tapping the toggle (e.g. they just enrolled
+    // a fingerprint in a different app).
+    final status = await BiometricService.checkStatus();
     if (!mounted) return;
-    setState(() => _isClearingCache = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Cache cleared.')));
+    if (!status.isAvailable) {
+      setState(() => _biometricStatus = status);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(status.message ?? 'Biometric login isn\'t available.'),
+        ),
+      );
+      return;
+    }
+
+    // Prove the scan actually works on this device before saving the
+    // preference — otherwise the user could enable a lock that then
+    // fails at launch and shuts them out of their own app.
+    final ok = await BiometricService.authenticate(
+      reason: 'Scan to enable biometric login',
+    );
+
+    if (!mounted) return;
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Biometric scan cancelled or didn\'t match.'),
+        ),
+      );
+      return;
+    }
+
+    await BiometricService.setEnabled(true);
+    if (!mounted) return;
+    setState(() => _biometricLogin = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Biometric login enabled.')),
+    );
   }
 
-  void _handleDeleteAccount() {
-    showDialog(
+  // ------------------------------------------------------------
+  // Linked accounts
+  // ------------------------------------------------------------
+
+  Future<void> _handleLinkedAccounts() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    if (_hasGoogle) {
+      // Only allow unlinking if they'd still have a way back in.
+      if (!_hasPassword) {
+        _showMessage(
+          'Google is your only sign-in method, so it can\'t be removed. '
+          'Set a password first.',
+        );
+        return;
+      }
+
+      final confirmed = await _confirm(
+        title: 'Unlink Google?',
+        message:
+            'You\'ll need to sign in with your email and password from now on.',
+        confirmLabel: 'Unlink',
+        isDestructive: true,
+      );
+      if (confirmed != true) return;
+
+      try {
+        await user.unlink('google.com');
+        await AuthApiService.googleSignIn.signOut();
+        if (!mounted) return;
+        setState(() {});
+        _showMessage('Google account unlinked.');
+      } on FirebaseAuthException catch (e) {
+        if (!mounted) return;
+        _showMessage(e.message ?? 'Could not unlink Google.');
+      }
+      return;
+    }
+
+    // Not linked yet — run the Google sign-in flow and attach that
+    // credential to the existing account rather than creating a
+    // second, separate one.
+    try {
+      await AuthApiService.googleSignIn.signOut();
+      final googleUser = await AuthApiService.googleSignIn.signIn();
+      if (googleUser == null) return; // Cancelled.
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await user.linkWithCredential(credential);
+      if (!mounted) return;
+      setState(() {});
+      _showMessage('Google account linked.');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String message;
+      switch (e.code) {
+        case 'provider-already-linked':
+          message = 'That Google account is already linked.';
+          break;
+        case 'credential-already-in-use':
+          message =
+              'That Google account is already used by a different Career Ready account.';
+          break;
+        case 'requires-recent-login':
+          message = 'Please sign out and back in, then try again.';
+          break;
+        default:
+          message = e.message ?? 'Could not link Google.';
+      }
+      _showMessage(message);
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage('Could not link Google.');
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Export my data
+  // ------------------------------------------------------------
+
+  Future<void> _handleExportData() async {
+    if (_isExporting) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isExporting = true);
+
+    try {
+      final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) {
+        throw ApiException('Session expired.', code: 'TOKEN_UNAVAILABLE');
+      }
+
+      final data = await AuthApiService.exportData(idToken: idToken);
+
+      // Write it out as pretty-printed JSON and hand it to the OS
+      // share sheet, which lets the user save to Files, email it to
+      // themselves, or send it anywhere else — no storage permission
+      // needed since it goes to the app's own temp directory.
+      final pretty = const JsonEncoder.withIndent('  ').convert(data);
+      final dir = await getTemporaryDirectory();
+      final stamp = DateTime.now().toIso8601String().split('T').first;
+      final file = File('${dir.path}/career-ready-data-$stamp.json');
+      await file.writeAsString(pretty);
+
+      if (!mounted) return;
+      setState(() => _isExporting = false);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'My Career Ready data export',
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isExporting = false);
+      _showMessage(e.message);
+    } on NetworkException catch (e) {
+      if (!mounted) return;
+      setState(() => _isExporting = false);
+      _showMessage(e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isExporting = false);
+      _showMessage('Could not export your data.');
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Clear cache
+  // ------------------------------------------------------------
+
+  Future<void> _handleClearCache() async {
+    setState(() => _isClearingCache = true);
+
+    try {
+      // Actually empties the app's temp directory — image picker
+      // copies, previous data exports, and anything else cached there.
+      final dir = await getTemporaryDirectory();
+      if (dir.existsSync()) {
+        for (final entity in dir.listSync()) {
+          try {
+            entity.deleteSync(recursive: true);
+          } catch (_) {
+            // A file still held open by the OS isn't worth failing over.
+          }
+        }
+      }
+    } catch (_) {
+      // Non-fatal — fall through to the confirmation either way.
+    }
+
+    if (!mounted) return;
+    setState(() => _isClearingCache = false);
+    _showMessage('Cache cleared.');
+  }
+
+  // ------------------------------------------------------------
+  // Delete account
+  // ------------------------------------------------------------
+
+  Future<void> _handleDeleteAccount() async {
+    if (_isDeleting) return;
+
+    final confirmed = await _confirm(
+      title: 'Delete account?',
+      message:
+          'This permanently deletes your profile, resumes, and progress. '
+          'This cannot be undone.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    // Second gate: confirm identity. Firebase requires a recent login
+    // for deletion anyway, and it makes an irreversible action
+    // deliberate rather than a single mistaken tap.
+    final reauthed = await ReauthHelper.reauthenticate(context);
+    if (!reauthed || !mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw ApiException('Session expired.');
+
+      // Force-refresh so the backend sees a token minted after the
+      // reauth we just did.
+      final idToken = await user.getIdToken(true);
+      if (idToken == null || idToken.isEmpty) {
+        throw ApiException('Session expired.', code: 'TOKEN_UNAVAILABLE');
+      }
+
+      // The backend deletes both the Firestore doc and the Auth user,
+      // so there's no client-side user.delete() call after this.
+      await AuthApiService.deleteAccount(idToken: idToken);
+
+      await AuthApiService.signOut();
+      await BiometricService.setEnabled(false);
+      AppState.instance.clearProfile();
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      _showMessage(e.message);
+    } on NetworkException catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      _showMessage(e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      _showMessage('Could not delete your account.');
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Shared UI helpers
+  // ------------------------------------------------------------
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool?> _confirm({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    bool isDestructive = false,
+  }) {
+    return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete account?'),
-        content: const Text(
-          'This permanently deletes your profile, resumes, and progress. This cannot be undone.',
-        ),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              // TODO: call backend account-deletion endpoint.
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: const Text('Delete'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: isDestructive
+                ? TextButton.styleFrom(foregroundColor: AppColors.danger)
+                : null,
+            child: Text(confirmLabel),
           ),
         ],
       ),
     );
   }
 
+  void _open(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
+
+  Future<void> _handleSetPassword() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SetPasswordScreen()));
+    // providerData is re-read live in the getters above, so this just
+    // needs a rebuild to flip the row from "Set a password" to
+    // "Change password" once one's been added.
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final email = FirebaseAuth.instance.currentUser?.email;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -208,34 +558,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
             _sectionLabel('ACCOUNT'),
+
             _tile(
-              icon: Icons.lock_outline_rounded,
-              title: 'Change password',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ChangePasswordScreen(),
-                  ),
-                );
-              },
+              icon: Icons.mail_outline_rounded,
+              title: 'Change email',
+              subtitle: email ?? 'Update your sign-in email.',
+              onTap: () => _open(const ChangeEmailScreen()),
             ),
+
+            // A Google-only account has no password yet — offer to set
+            // one rather than hiding the row outright, so users who
+            // skipped this at sign-up still have a way to add it.
+            _hasPassword
+                ? _tile(
+                    icon: Icons.lock_outline_rounded,
+                    title: 'Change password',
+                    onTap: () => _open(const ChangePasswordScreen()),
+                  )
+                : _tile(
+                    icon: Icons.lock_outline_rounded,
+                    title: 'Set a password',
+                    subtitle:
+                        'Add a password so you can also sign in without Google.',
+                    onTap: _handleSetPassword,
+                  ),
+
             _tile(
               icon: Icons.fingerprint_rounded,
               title: 'Biometric login',
-              subtitle: 'Use fingerprint or face unlock to sign in.',
+              subtitle: _biometricStatus.isAvailable
+                  ? 'Use fingerprint or face unlock to open the app.'
+                  : (_biometricStatus.message ??
+                        'Biometric login isn\'t available.'),
               trailing: Switch(
                 value: _biometricLogin,
                 activeThumbColor: AppColors.primary,
-                onChanged: (v) => setState(() => _biometricLogin = v),
+                onChanged: _biometricStatus.isAvailable
+                    ? _handleBiometricToggle
+                    : (_biometricStatus.status ==
+                              BiometricStatus.unsupportedPlatform
+                          ? null
+                          // Hardware/enrollment can change without
+                          // reopening this screen (e.g. they back out
+                          // to enroll a fingerprint) — let a tap
+                          // re-check rather than staying stuck.
+                          : (_) => _handleBiometricToggle(true)),
               ),
             ),
+
             _tile(
               icon: Icons.g_mobiledata_rounded,
               title: 'Linked accounts',
-              subtitle: 'Google — not connected',
-              onTap: () {
-                // TODO: trigger Google account linking flow.
-              },
+              subtitle: _hasGoogle
+                  ? 'Google — connected'
+                  : 'Google — not connected',
+              onTap: _handleLinkedAccounts,
             ),
 
             _sectionLabel('NOTIFICATIONS'),
@@ -243,13 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.notifications_outlined,
               title: 'Notification preferences',
               subtitle: 'Manage what you get notified about.',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const NotificationsScreen(),
-                  ),
-                );
-              },
+              onTap: () => _open(const NotificationsScreen()),
             ),
 
             _sectionLabel('APPEARANCE & LANGUAGE'),
@@ -292,10 +663,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _tile(
               icon: Icons.download_outlined,
               title: 'Export my data',
-              subtitle: 'Download a copy of your resumes and progress.',
-              onTap: () {
-                // TODO: trigger data export job.
-              },
+              subtitle: _isExporting
+                  ? 'Preparing your export...'
+                  : 'Download a copy of your profile data.',
+              onTap: _isExporting ? null : _handleExportData,
+              trailing: _isExporting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                      ),
+                    )
+                  : null,
             ),
 
             _sectionLabel('ABOUT'),
@@ -307,24 +688,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _tile(
               icon: Icons.privacy_tip_outlined,
               title: 'Privacy policy',
-              onTap: () {
-                // TODO: open privacy policy (web view or external link).
-              },
+              onTap: () => _open(LegalDocumentScreen.privacyPolicy()),
             ),
             _tile(
               icon: Icons.description_outlined,
               title: 'Terms of service',
-              onTap: () {
-                // TODO: open terms of service.
-              },
+              onTap: () => _open(LegalDocumentScreen.termsOfService()),
             ),
 
             _sectionLabel('DANGER ZONE'),
             _tile(
               icon: Icons.delete_outline_rounded,
               title: 'Delete account',
+              subtitle: _isDeleting ? 'Deleting...' : null,
               isDestructive: true,
-              onTap: _handleDeleteAccount,
+              onTap: _isDeleting ? null : _handleDeleteAccount,
+              trailing: _isDeleting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(AppColors.danger),
+                      ),
+                    )
+                  : null,
             ),
           ],
         ),

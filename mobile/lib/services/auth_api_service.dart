@@ -174,6 +174,7 @@ class AuthApiService {
     String? course,
     String? yearLevel,
     String? gender,
+    String? photoUrl,
   }) async {
     final body = <String, dynamic>{
       if (fullName != null) 'fullName': fullName,
@@ -182,6 +183,7 @@ class AuthApiService {
       if (course != null) 'course': course,
       if (yearLevel != null) 'yearLevel': yearLevel,
       if (gender != null) 'gender': gender,
+      if (photoUrl != null) 'photoUrl': photoUrl,
     };
 
     try {
@@ -192,6 +194,61 @@ class AuthApiService {
       );
 
       return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // EXPORT MY DATA (Settings)
+  // ============================================================
+
+  /// Returns everything the backend holds on this user, ready to be
+  /// written to a file and shared.
+  static Future<Map<String, dynamic>> exportData({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/me/export'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // DELETE ACCOUNT (Settings — danger zone)
+  // ============================================================
+
+  /// Deletes the Firestore profile and the Firebase Auth account.
+  /// The caller must have reauthenticated the user first — Firebase
+  /// rejects this for stale sessions.
+  static Future<void> deleteAccount({required String idToken}) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      _handleResponse(response);
     } on SocketException {
       throw NetworkException(
         'Unable to connect to the server. '

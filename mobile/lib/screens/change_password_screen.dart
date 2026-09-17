@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -11,107 +12,137 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  final _currentPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _currentController = TextEditingController();
+  final _newController = TextEditingController();
+  final _confirmController = TextEditingController();
 
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
-  bool _saving = false;
+
+  bool _isSubmitting = false;
+  String? _errorText;
 
   @override
   void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
+    _currentController.dispose();
+    _newController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
-  Future<void> _changePassword() async {
+  String? _validateNew(String? value) {
+    final v = value ?? '';
+    if (v.isEmpty) return 'Enter a new password.';
+    if (v.length < 8) return 'Use at least 8 characters.';
+    if (v == _currentController.text) {
+      return 'New password must be different from your current one.';
+    }
+    return null;
+  }
+
+  Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting) return;
 
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null || user.email == null) {
-      _showError('You are not signed in.');
+      setState(() {
+        _errorText = 'Your session has expired. Please sign in again.';
+      });
       return;
     }
 
-    setState(() => _saving = true);
+    setState(() {
+      _isSubmitting = true;
+      _errorText = null;
+    });
 
     try {
-      // Re-authentication is required for this sensitive operation.
+      // Reauthenticate inline using the "current password" field the
+      // user already filled in — no second prompt needed here, unlike
+      // the email-change and delete-account flows which use
+      // ReauthHelper because they have no password field of their own.
       final credential = EmailAuthProvider.credential(
         email: user.email!,
-        password: _currentPasswordController.text,
+        password: _currentController.text,
       );
-
       await user.reauthenticateWithCredential(credential);
 
-      await user.updatePassword(_newPasswordController.text);
+      await user.updatePassword(_newController.text);
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password changed successfully.')),
+        const SnackBar(content: Text('Password updated.')),
       );
-
       Navigator.of(context).pop();
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       String message;
-
       switch (e.code) {
         case 'wrong-password':
         case 'invalid-credential':
           message = 'Your current password is incorrect.';
           break;
         case 'weak-password':
-        case 'password-does-not-meet-requirements':
-          message = 'Your new password is too weak.';
+          message = 'That password is too weak. Try something longer.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many attempts. Please try again later.';
           break;
         case 'requires-recent-login':
-          message = 'Please sign in again before changing your password.';
+          message = 'Please sign out and back in, then try again.';
           break;
         default:
-          message = e.message ?? 'Unable to change your password.';
+          message = e.message ?? 'Could not update your password.';
       }
-
-      _showError(message);
+      setState(() {
+        _errorText = message;
+        _isSubmitting = false;
+      });
     } catch (_) {
-      _showError('Unable to change your password. Please try again.');
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      if (!mounted) return;
+      setState(() {
+        _errorText = 'Something went wrong. Please try again.';
+        _isSubmitting = false;
+      });
     }
   }
 
-  void _showError(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
-    );
-  }
-
-  InputDecoration _decoration(
-    String label,
-    IconData icon,
-    bool obscure,
-    VoidCallback toggle,
-  ) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      suffixIcon: IconButton(
-        icon: Icon(
-          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-        ),
-        onPressed: toggle,
+  Widget _passwordField({
+    required String label,
+    required TextEditingController controller,
+    required bool obscure,
+    required VoidCallback onToggle,
+    String? Function(String?)? validator,
+    String? hint,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppTextStyles.caption),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            obscureText: obscure,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  size: 18,
+                ),
+                onPressed: onToggle,
+              ),
+            ),
+          ),
+        ],
       ),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 
@@ -119,92 +150,93 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Change password')),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: const Text(
+          'Change password',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              const Text('Change your password', style: AppTextStyles.headline),
-              const SizedBox(height: 8),
-              const Text(
-                'For your security, you must enter your current password first.',
-                style: AppTextStyles.caption,
-              ),
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: _currentPasswordController,
-                obscureText: _obscureCurrent,
-                decoration: _decoration(
-                  'Current password',
-                  Icons.lock_outline,
-                  _obscureCurrent,
-                  () => setState(() => _obscureCurrent = !_obscureCurrent),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Choose a strong password you don\'t use anywhere else.',
+                  style: AppTextStyles.body,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter your current password.';
-                  }
-                  return null;
-                },
-              ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _newPasswordController,
-                obscureText: _obscureNew,
-                decoration: _decoration(
-                  'New password',
-                  Icons.lock_reset_outlined,
-                  _obscureNew,
-                  () => setState(() => _obscureNew = !_obscureNew),
+                _passwordField(
+                  label: 'Current password',
+                  controller: _currentController,
+                  obscure: _obscureCurrent,
+                  onToggle: () =>
+                      setState(() => _obscureCurrent = !_obscureCurrent),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? 'Enter your current password.'
+                      : null,
                 ),
-                validator: (value) {
-                  if (value == null || value.length < 8) {
-                    return 'Password must be at least 8 characters.';
-                  }
-                  return null;
-                },
-              ),
 
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirm,
-                decoration: _decoration(
-                  'Confirm new password',
-                  Icons.verified_user_outlined,
-                  _obscureConfirm,
-                  () => setState(() => _obscureConfirm = !_obscureConfirm),
+                _passwordField(
+                  label: 'New password',
+                  controller: _newController,
+                  obscure: _obscureNew,
+                  onToggle: () => setState(() => _obscureNew = !_obscureNew),
+                  validator: _validateNew,
+                  hint: 'At least 8 characters',
                 ),
-                validator: (value) {
-                  if (value != _newPasswordController.text) {
-                    return 'Passwords do not match.';
-                  }
-                  return null;
-                },
-              ),
 
-              const SizedBox(height: 28),
+                _passwordField(
+                  label: 'Confirm new password',
+                  controller: _confirmController,
+                  obscure: _obscureConfirm,
+                  onToggle: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                  validator: (v) => v != _newController.text
+                      ? 'Passwords don\'t match.'
+                      : null,
+                ),
 
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _saving ? null : _changePassword,
-                  child: _saving
+                if (_errorText != null) ...[
+                  Text(
+                    _errorText!,
+                    style: const TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  child: _isSubmitting
                       ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
                         )
-                      : const Text('Change password'),
+                      : const Text('Update password'),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

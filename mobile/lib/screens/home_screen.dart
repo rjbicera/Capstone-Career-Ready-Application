@@ -125,15 +125,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: AppColors.blueLight,
-                        child: Text(
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: AppColors.blue,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        backgroundImage: state.photoUrl != null
+                            ? NetworkImage(state.photoUrl!)
+                            : null,
+                        child: state.photoUrl == null
+                            ? Text(
+                                displayName.isNotEmpty
+                                    ? displayName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: AppColors.blue,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              )
+                            : null,
                       ),
                     ],
                   ),

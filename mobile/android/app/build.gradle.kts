@@ -22,6 +22,7 @@ android {
         applicationId = "com.captone.careerprep.mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // local_auth (biometric login) requires minSdk 23+.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

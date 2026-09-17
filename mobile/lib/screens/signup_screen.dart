@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_background.dart';
 import 'demographic_profile_screen.dart';
 import 'main_navigation.dart';
+import 'set_password_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -32,10 +33,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _isSubmitting = false;
   bool _isGoogleSubmitting = false;
+  bool _isNewGoogleUser = false;
 
   String? _submitError;
 
-  static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final _emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[a-zA-Z]{2,}$');
 
   @override
   void dispose() {
@@ -299,7 +301,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       // Firebase signs in the Google account.
       // If it is a new Firebase account, Firebase creates it.
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      _isNewGoogleUser = userCredential.additionalUserInfo?.isNewUser ?? false;
     } on FirebaseAuthException catch (e) {
       debugPrint('GOOGLE SIGN-UP ERROR: ${e.code}');
       debugPrint('GOOGLE SIGN-UP MESSAGE: ${e.message}');
@@ -330,6 +335,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() {
       _isGoogleSubmitting = false;
     });
+
+    // Brand-new Google account — offer to attach a password before
+    // continuing. Skippable; either way we fall through to routing.
+    if (_isNewGoogleUser) {
+      _isNewGoogleUser = false;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const SetPasswordScreen()));
+      if (!mounted) return;
+    }
 
     // IMPORTANT:
     // Google Signup now uses the same profile-completion
