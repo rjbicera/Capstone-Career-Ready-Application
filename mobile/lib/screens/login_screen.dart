@@ -345,15 +345,15 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Welcome back', style: AppTextStyles.headline),
+                Text('Welcome back', style: AppTextStyles.headline),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Sign in to continue your prep',
                   style: AppTextStyles.body,
                 ),
                 const SizedBox(height: 32),
 
-                const Text('Email', style: AppTextStyles.caption),
+                Text('Email', style: AppTextStyles.caption),
                 const SizedBox(height: 6),
 
                 TextField(
@@ -366,7 +366,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 16),
 
-                const Text('Password', style: AppTextStyles.caption),
+                Text('Password', style: AppTextStyles.caption),
                 const SizedBox(height: 6),
 
                 TextField(
@@ -395,7 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 10),
                   Text(
                     _errorText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.danger,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -449,12 +449,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Row(
                   children: [
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: AppColors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Text('or', style: AppTextStyles.caption),
                     ),
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: AppColors.border)),
                   ],
                 ),
 
@@ -487,7 +487,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const TextSpan(text: "Don't have an account? "),
                         TextSpan(
                           text: 'Sign up',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                           ),

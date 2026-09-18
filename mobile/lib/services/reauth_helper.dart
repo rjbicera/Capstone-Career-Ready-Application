@@ -125,7 +125,7 @@ class ReauthHelper {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'For your security, please re-enter your password to continue.',
                 style: AppTextStyles.body,
               ),

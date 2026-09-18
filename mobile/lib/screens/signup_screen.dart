@@ -475,21 +475,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   const SizedBox(height: 12),
 
-                  const Text(
+                  Text(
                     'Create your account',
                     style: AppTextStyles.headline,
                   ),
 
                   const SizedBox(height: 6),
 
-                  const Text(
+                  Text(
                     'Start prepping for the career you want',
                     style: AppTextStyles.body,
                   ),
 
                   const SizedBox(height: 28),
 
-                  const Text('Full name', style: AppTextStyles.caption),
+                  Text('Full name', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -502,7 +502,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   const SizedBox(height: 16),
 
-                  const Text('Email', style: AppTextStyles.caption),
+                  Text('Email', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -518,7 +518,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   const SizedBox(height: 16),
 
-                  const Text('Password', style: AppTextStyles.caption),
+                  Text('Password', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -547,7 +547,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   const SizedBox(height: 16),
 
-                  const Text('Confirm password', style: AppTextStyles.caption),
+                  Text('Confirm password', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -578,7 +578,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 14),
                     Text(
                       _submitError!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.danger,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -611,12 +611,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   Row(
                     children: [
-                      const Expanded(child: Divider(color: AppColors.border)),
+                      Expanded(child: Divider(color: AppColors.border)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text('or', style: AppTextStyles.caption),
                       ),
-                      const Expanded(child: Divider(color: AppColors.border)),
+                      Expanded(child: Divider(color: AppColors.border)),
                     ],
                   ),
 
@@ -650,7 +650,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           const TextSpan(text: 'Already have an account? '),
                           TextSpan(
                             text: 'Sign in',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                             ),

@@ -1,30 +1,48 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
+import 'app_palette.dart';
+
+/// The palette every screen reads through [AppColors].
+///
+/// ThemeController swaps this when the user toggles Dark mode. It starts
+/// on the light palette so widget tests and any pre-load frame look the
+/// same as they always have.
+AppPalette activePalette = lightPalette;
 
 /// Central design tokens for Career Ready.
 /// Keep every screen pulling colors/text styles from here so the
 /// app stays visually consistent as more screens get built.
+///
+/// These are getters rather than constants because they resolve against
+/// [activePalette], which changes at runtime. Call sites keep reading
+/// `AppColors.textPrimary` exactly as before, but a reference like that
+/// can no longer sit inside a `` expression.
 class AppColors {
   AppColors._();
 
   // Pastel indigo, lavender and blush are adapted from the resume-analyzer
   // reference artwork. Keep functional state colors distinct and accessible.
-  static const Color primary = Color(0xFF6678EF);
-  static const Color primaryLight = Color(0xFFE9ECFF);
-  static const Color accent = Color(0xFF8E98FF);
+  static Color get primary => activePalette.primary;
+  static Color get primaryLight => activePalette.primaryLight;
+  static Color get accent => activePalette.accent;
 
-  static const Color blue = Color(0xFF6F78D8);
-  static const Color blueLight = Color(0xFFF0F4FF);
-  static const Color blueSoft = Color(0xFFC9D2FF);
+  static Color get blue => activePalette.blue;
+  static Color get blueLight => activePalette.blueLight;
+  static Color get blueSoft => activePalette.blueSoft;
 
-  static const Color background = Colors.transparent;
-  static const Color card = Colors.white;
+  static Color get background => activePalette.background;
+  static Color get card => activePalette.card;
+  static Color get onPrimary => activePalette.onPrimary;
 
-  static const Color textPrimary = Color(0xFF1E1B22);
-  static const Color textSecondary = Color(0xFF475467);
-  static const Color textMuted = Color(0xFF667085);
+  static Color get textPrimary => activePalette.textPrimary;
+  static Color get textSecondary => activePalette.textSecondary;
+  static Color get textMuted => activePalette.textMuted;
 
-  static const Color border = Color(0xFFE4E7EC);
-  static const Color danger = Color(0xFFD95D79);
+  static Color get border => activePalette.border;
+  static Color get danger => activePalette.danger;
+
+  /// Fill used behind incorrect/destructive states (e.g. a wrong quiz answer).
+  static Color get dangerSoft => activePalette.dangerSoft;
 }
 
 class AppRadius {
@@ -37,27 +55,27 @@ class AppRadius {
 class AppTextStyles {
   AppTextStyles._();
 
-  static const TextStyle headline = TextStyle(
+  static TextStyle get headline => TextStyle(
     fontSize: 23,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.2,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle title = TextStyle(
+  static TextStyle get title => TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.1,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle get caption => TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
@@ -67,85 +85,104 @@ class AppTextStyles {
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light {
+  static ThemeData get light => _build(lightPalette);
+
+  static ThemeData get dark => _build(darkPalette);
+
+  /// Builds one ThemeData from an explicit palette. Taking the palette as
+  /// a parameter (instead of reading [activePalette]) is what lets
+  /// MaterialApp hold both the light and dark themes at the same time.
+  static ThemeData _build(AppPalette p) {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.background,
+      brightness: p.brightness,
+      scaffoldBackgroundColor: p.background,
       fontFamily: 'Mona Sans',
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        primary: AppColors.primary,
-        secondary: AppColors.blue,
-        surface: AppColors.background,
+        seedColor: p.primary,
+        brightness: p.brightness,
+        primary: p.primary,
+        secondary: p.blue,
+        surface: p.background,
+        onSurface: p.textPrimary,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: p.primary,
+          foregroundColor: p.onPrimary,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: p.primary,
           minimumSize: const Size.fromHeight(50),
-          side: const BorderSide(color: AppColors.border, width: 1.5),
+          side: BorderSide(color: p.border, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: p.card,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.field),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: p.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.field),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: p.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.field),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: p.primary, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+        hintStyle: TextStyle(color: p.textMuted, fontSize: 13),
       ),
       // `colorScheme.surface` above is intentionally transparent so the
       // AppBackground gradient shows through the Scaffold body. But
       // several Material components (dropdown menus, popup menus,
       // dialogs) also paint their own background from colorScheme.surface
-      // by default — so that same transparency was leaking into them,
-      // making their popups render see-through over whatever content sits
-      // underneath instead of as an opaque card (e.g. the year-level
+      // by default, so that same transparency was leaking into them and
+      // making their popups render see-through (e.g. the year-level
       // dropdown on the sign-up screen, and the logout confirmation
-      // dialog on profile). Pin these back to an opaque white explicitly.
+      // dialog on profile). Pin these back to an opaque card explicitly.
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(AppColors.card),
+          backgroundColor: WidgetStateProperty.all(p.card),
         ),
       ),
-      popupMenuTheme: const PopupMenuThemeData(color: AppColors.card),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: AppColors.card,
+      popupMenuTheme: PopupMenuThemeData(color: p.card),
+      dialogTheme: DialogThemeData(
+        backgroundColor: p.card,
         surfaceTintColor: Colors.transparent,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.card,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: p.card,
         surfaceTintColor: Colors.transparent,
       ),
-      canvasColor: AppColors.card,
+      canvasColor: p.card,
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: p.isDark ? const Color(0xFF2C2B35) : null,
+        contentTextStyle: p.isDark ? TextStyle(color: p.textPrimary) : null,
+      ),
     );
   }
 }

@@ -120,18 +120,18 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   Container(
                     width: 56,
                     height: 56,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.lock_outline_rounded,
                       color: AppColors.primary,
                       size: 26,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Add a password?',
                     style: AppTextStyles.headline,
                   ),
@@ -144,7 +144,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  const Text('Password', style: AppTextStyles.caption),
+                  Text('Password', style: AppTextStyles.caption),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _passwordController,
@@ -167,7 +167,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  const Text('Confirm password', style: AppTextStyles.caption),
+                  Text('Confirm password', style: AppTextStyles.caption),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _confirmController,
@@ -194,7 +194,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                     const SizedBox(height: 12),
                     Text(
                       _errorText!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.danger,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

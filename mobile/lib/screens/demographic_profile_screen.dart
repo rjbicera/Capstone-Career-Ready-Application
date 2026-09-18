@@ -197,7 +197,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppColors.blueLight : Colors.white,
+          color: selected ? AppColors.blueLight : AppColors.card,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(
             color: selected ? AppColors.blue : AppColors.border,
@@ -228,7 +228,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -271,21 +271,21 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Tell us about yourself',
                     style: AppTextStyles.headline,
                   ),
 
                   const SizedBox(height: 6),
 
-                  const Text(
+                  Text(
                     'This helps us personalize your career preparation experience.',
                     style: AppTextStyles.body,
                   ),
 
                   const SizedBox(height: 32),
 
-                  const Text('Nickname', style: AppTextStyles.caption),
+                  Text('Nickname', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -310,7 +310,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                   const SizedBox(height: 24),
 
-                  const Text('Program', style: AppTextStyles.caption),
+                  Text('Program', style: AppTextStyles.caption),
 
                   const SizedBox(height: 8),
 
@@ -332,7 +332,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                   const SizedBox(height: 24),
 
-                  const Text('Year level', style: AppTextStyles.caption),
+                  Text('Year level', style: AppTextStyles.caption),
 
                   const SizedBox(height: 8),
 
@@ -368,7 +368,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                   const SizedBox(height: 24),
 
-                  const Text('Gender', style: AppTextStyles.caption),
+                  Text('Gender', style: AppTextStyles.caption),
 
                   const SizedBox(height: 6),
 
@@ -423,7 +423,7 @@ class _DemographicProfileScreenState extends State<DemographicProfileScreen> {
 
                     Text(
                       _errorText!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.danger,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

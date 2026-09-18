@@ -87,7 +87,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
               if (Navigator.of(context).canPop()) ...[
                 IconButton(
                   onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     size: 18,
                     color: AppColors.textPrimary,
@@ -97,7 +97,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                 ),
                 const SizedBox(height: 8),
               ],
-              const Text('Mock interview', style: AppTextStyles.headline),
+              Text('Mock interview', style: AppTextStyles.headline),
               const SizedBox(height: 4),
               Text(
                 'Question ${_currentQuestion + 1} of ${_questions.length}',
@@ -112,7 +112,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   value: progress,
                   minHeight: 6,
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.blue),
+                  valueColor: AlwaysStoppedAnimation(AppColors.blue),
                 ),
               ),
               const SizedBox(height: 20),
@@ -129,7 +129,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   child: Text(
                     '"${_questions[_currentQuestion]}"',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 1.6,

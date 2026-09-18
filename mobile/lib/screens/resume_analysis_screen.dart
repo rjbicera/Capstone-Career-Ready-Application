@@ -44,7 +44,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   // Formatting/Clarity tips are field-agnostic; the Keywords tip is the
   // one that should actually differ by program.
   List<_Suggestion> get _suggestions => [
-    const _Suggestion(
+    _Suggestion(
       badgeLabel: 'Formatting',
       badgeColor: AppColors.blue,
       badgeBg: AppColors.blueLight,
@@ -58,7 +58,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
           ? 'Add "stakeholder management" to match target roles.'
           : 'Add "cloud infrastructure" to match target roles.',
     ),
-    const _Suggestion(
+    _Suggestion(
       badgeLabel: 'Clarity',
       badgeColor: AppColors.blue,
       badgeBg: AppColors.blueLight,
@@ -125,7 +125,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                 if (Navigator.of(context).canPop()) ...[
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
                       color: AppColors.textPrimary,
@@ -137,7 +137,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                 ],
                 const _GradientHeading('Smart feedback for your dream job'),
                 const SizedBox(height: 8),
-                const Center(
+                Center(
                   child: Text(
                     'Drop your resume for an ATS score and improvement tips.',
                     textAlign: TextAlign.center,
@@ -155,7 +155,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         'Overall score',
                         style: TextStyle(
                           fontSize: 12,
@@ -167,12 +167,12 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                       Text.rich(
                         TextSpan(
                           text: '$_displayScore',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w800,
                             color: AppColors.blue,
                           ),
-                          children: const [
+                          children: [
                             TextSpan(
                               text: '/100',
                               style: TextStyle(
@@ -195,13 +195,13 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.card,
                       borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.description_rounded,
                           size: 18,
                           color: AppColors.primary,
@@ -218,7 +218,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                           ),
                         ),
                         if (_isUploading)
-                          const SizedBox(
+                          SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
@@ -229,7 +229,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                             ),
                           )
                         else
-                          const Icon(
+                          Icon(
                             Icons.check_circle_rounded,
                             size: 18,
                             color: AppColors.primary,
@@ -239,7 +239,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   ),
                 ],
 
-                const Text('AI improvement tips', style: AppTextStyles.title),
+                Text('AI improvement tips', style: AppTextStyles.title),
                 const SizedBox(height: 10),
 
                 ..._suggestions.map(
@@ -248,7 +248,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.card,
                       borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: AppColors.border),
                     ),
@@ -292,24 +292,24 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.84),
+                    color: AppColors.card.withValues(alpha: 0.84),
                     borderRadius: BorderRadius.circular(AppRadius.card),
                     border: Border.all(color: AppColors.blueSoft, width: 1.5),
                   ),
                   child: Column(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.upload_file_rounded,
                         color: AppColors.blue,
                         size: 32,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Upload your latest resume',
                         style: AppTextStyles.title,
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'PDF, DOC, or DOCX',
                         style: AppTextStyles.caption,
                       ),

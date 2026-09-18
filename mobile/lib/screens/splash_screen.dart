@@ -138,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 18),
               FadeTransition(
                 opacity: _fade,
-                child: const Text(
+                child: Text(
                   'career ready',
                   style: TextStyle(
                     color: AppColors.textPrimary,
@@ -161,8 +161,8 @@ class _SplashScreenState extends State<SplashScreen>
                       child: LinearProgressIndicator(
                         value: _progress.value,
                         minHeight: 4,
-                        backgroundColor: Colors.white.withValues(alpha: 0.65),
-                        valueColor: const AlwaysStoppedAnimation(
+                        backgroundColor: AppColors.card.withValues(alpha: 0.65),
+                        valueColor: AlwaysStoppedAnimation(
                           AppColors.primary,
                         ),
                       ),

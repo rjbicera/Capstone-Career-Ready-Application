@@ -11,6 +11,7 @@ import '../services/biometric_service.dart';
 import '../services/reauth_helper.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 import 'change_email_screen.dart';
 import 'change_password_screen.dart';
 import 'legal_document_screen.dart';
@@ -32,7 +33,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkMode = false;
+  // Seeded from ThemeController so the switch reflects the saved choice.
+  bool _darkMode = ThemeController.instance.isDark;
   bool _biometricLogin = false;
   BiometricCheckResult _biometricStatus = const BiometricCheckResult(
     BiometricStatus.error,
@@ -50,7 +52,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _darkMode = ThemeController.instance.isDark;
     _loadBiometricState();
+  }
+
+  /// Applies the light/dark choice immediately (so the switch and the
+  /// whole app repaint together) and lets ThemeController persist it.
+  Future<void> _handleDarkModeToggle(bool value) async {
+    setState(() => _darkMode = value);
+    await ThemeController.instance.setDarkMode(value);
   }
 
   Future<void> _loadBiometricState() async {
@@ -81,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     padding: const EdgeInsets.only(bottom: 10, top: 4),
     child: Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: AppColors.textMuted,
@@ -102,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       child: Material(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.card),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -141,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 trailing ??
                     (onTap != null
-                        ? const Icon(
+                        ? Icon(
                             Icons.chevron_right_rounded,
                             size: 18,
                             color: AppColors.textMuted,
@@ -158,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguagePicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -169,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Language', style: AppTextStyles.title),
+              Text('Language', style: AppTextStyles.title),
               const SizedBox(height: 8),
               RadioGroup<String>(
                 groupValue: _language,
@@ -543,7 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Settings',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -551,7 +561,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: ListView(
@@ -625,13 +635,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             _sectionLabel('APPEARANCE & LANGUAGE'),
             _tile(
-              icon: Icons.dark_mode_outlined,
+              icon: _darkMode
+                  ? Icons.dark_mode_rounded
+                  : Icons.light_mode_rounded,
               title: 'Dark mode',
-              subtitle: 'Currently in development.',
+              subtitle: _darkMode
+                  ? 'On - using the dark palette.'
+                  : 'Off - using the light palette.',
               trailing: Switch(
                 value: _darkMode,
                 activeThumbColor: AppColors.primary,
-                onChanged: (v) => setState(() => _darkMode = v),
+                onChanged: _handleDarkModeToggle,
               ),
             ),
             _tile(
@@ -650,7 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : 'Free up local storage.',
               onTap: _isClearingCache ? null : _handleClearCache,
               trailing: _isClearingCache
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
@@ -668,7 +682,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : 'Download a copy of your profile data.',
               onTap: _isExporting ? null : _handleExportData,
               trailing: _isExporting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
@@ -704,7 +718,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               isDestructive: true,
               onTap: _isDeleting ? null : _handleDeleteAccount,
               trailing: _isDeleting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(

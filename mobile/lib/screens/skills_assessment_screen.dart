@@ -29,7 +29,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
     AppState.instance.ensureDefaultSkillsSeeded();
     final progress = AppState.instance.skillsProgress;
     final categories = AppState.instance.skillCategoriesForCourse;
-    const colors = [AppColors.primary, AppColors.blue, AppColors.textMuted];
+    final colors = [AppColors.primary, AppColors.blue, AppColors.textMuted];
     _skills = [
       for (var i = 0; i < categories.length; i++)
         _Skill(
@@ -43,7 +43,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
   Future<void> _pickCategory() async {
     final chosen = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -54,7 +54,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Choose a category', style: AppTextStyles.title),
+              Text('Choose a category', style: AppTextStyles.title),
               const SizedBox(height: 12),
               ..._skills.map(
                 (skill) => ListTile(
@@ -112,7 +112,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Skills assessment',
                     style: AppTextStyles.headline,
                   ),
@@ -126,7 +126,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.card,
                     borderRadius: BorderRadius.circular(AppRadius.card),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -138,7 +138,7 @@ class _SkillsAssessmentScreenState extends State<SkillsAssessmentScreen> {
                         children: [
                           Text(
                             skill.label,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,

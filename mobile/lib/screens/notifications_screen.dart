@@ -80,7 +80,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.border),
       ),
@@ -92,7 +92,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -123,7 +123,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     padding: const EdgeInsets.only(bottom: 10, top: 4),
     child: Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: AppColors.textMuted,
@@ -142,7 +142,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Notifications',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -150,12 +150,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         actions: [
           if (_unreadCount > 0)
             TextButton(
               onPressed: _markAllRead,
-              child: const Text(
+              child: Text(
                 'Mark all read',
                 style: TextStyle(
                   fontSize: 12,
@@ -170,7 +170,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
-            const Text('Preferences', style: AppTextStyles.title),
+            Text('Preferences', style: AppTextStyles.title),
             const SizedBox(height: 12),
             _toggleRow(
               title: 'Resume updates',
@@ -229,7 +229,7 @@ class _NotificationTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: item.isRead ? Colors.white : AppColors.blueLight,
+        color: item.isRead ? AppColors.card : AppColors.blueLight,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(
           color: item.isRead ? AppColors.border : AppColors.blueSoft,
@@ -242,7 +242,7 @@ class _NotificationTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: item.isRead ? AppColors.blueLight : Colors.white,
+              color: item.isRead ? AppColors.blueLight : AppColors.card,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(item.icon, size: 18, color: AppColors.blue),
@@ -257,7 +257,7 @@ class _NotificationTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -269,7 +269,7 @@ class _NotificationTile extends StatelessWidget {
                         width: 7,
                         height: 7,
                         margin: const EdgeInsets.only(left: 6, top: 3),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.blue,
                           shape: BoxShape.circle,
                         ),

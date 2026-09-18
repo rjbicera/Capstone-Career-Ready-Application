@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
   void _showHelpSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -76,11 +76,11 @@ class ProfileScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Help & Support', style: AppTextStyles.title),
+              Text('Help & Support', style: AppTextStyles.title),
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(
+                leading: Icon(
                   Icons.mail_outline_rounded,
                   color: AppColors.blue,
                 ),
@@ -93,7 +93,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.quiz_outlined, color: AppColors.blue),
+                leading: Icon(Icons.quiz_outlined, color: AppColors.blue),
                 title: const Text('FAQs'),
                 onTap: () {
                   // TODO: navigate to FAQ screen or open web view.
@@ -102,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(
+                leading: Icon(
                   Icons.bug_report_outlined,
                   color: AppColors.blue,
                 ),
@@ -181,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: AppColors.textMuted,
@@ -196,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(color: AppColors.border),
         ),
@@ -204,7 +204,7 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: AppColors.primary,
@@ -265,7 +265,7 @@ class ProfileScreen extends StatelessWidget {
                             userName.isNotEmpty
                                 ? userName[0].toUpperCase()
                                 : '?',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.blue,
                               fontWeight: FontWeight.w800,
                               fontSize: 24,
@@ -364,7 +364,7 @@ class _MenuTile extends StatelessWidget {
         : AppColors.textPrimary;
 
     return Material(
-      color: Colors.white,
+      color: AppColors.card,
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -390,7 +390,7 @@ class _MenuTile extends StatelessWidget {
                 ),
               ),
               if (!action.isDestructive)
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
                   color: AppColors.textMuted,

@@ -27,6 +27,7 @@ class AppBackground extends StatelessWidget {
     if (_AppBackgroundScope.isApplied(context)) return child;
 
     final width = MediaQuery.sizeOf(context).width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final asset = switch (type) {
       AppBackgroundType.auth => 'assets/images/bg-auth.svg',
       AppBackgroundType.main when width < 700 => 'assets/images/bg-small.svg',
@@ -37,7 +38,14 @@ class AppBackground extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // Solid base so the transparent Scaffold always has a real
+          // backdrop, in both themes.
+          ColoredBox(color: isDark ? const Color(0xFF121118) : Colors.white),
           SvgPicture.asset(asset, fit: BoxFit.cover),
+          // The artwork is a light pastel gradient. Lay a dark scrim over
+          // it in dark mode so text and cards keep their contrast instead
+          // of sitting on a bright wash.
+          if (isDark) const ColoredBox(color: Color(0xE6121118)),
           child,
         ],
       ),

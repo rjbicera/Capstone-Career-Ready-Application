@@ -182,7 +182,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final source = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -203,11 +203,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             if (_photoUrl != null || _pickedPhoto != null)
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_outline_rounded,
                   color: AppColors.danger,
                 ),
-                title: const Text(
+                title: Text(
                   'Remove photo',
                   style: TextStyle(color: AppColors.danger),
                 ),
@@ -365,7 +365,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Edit profile',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -373,7 +373,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -395,7 +395,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: (_pickedPhoto == null && _photoUrl == null)
                           ? Text(
                               initial,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.blue,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 28,
@@ -431,7 +431,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         onTap: _handlePhotoTap,
                         child: Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
@@ -495,7 +495,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               if (_errorText != null) ...[
                 Text(
                   _errorText!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.danger,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

@@ -112,7 +112,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Change email',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -120,7 +120,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: Padding(
@@ -153,7 +153,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             ),
             const SizedBox(height: 24),
 
-            const Text('New email', style: AppTextStyles.caption),
+            Text('New email', style: AppTextStyles.caption),
             const SizedBox(height: 6),
             TextFormField(
               controller: _emailController,
@@ -170,7 +170,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               const SizedBox(height: 12),
               Text(
                 _errorText!,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.danger,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -206,18 +206,18 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           Container(
             width: 72,
             height: 72,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.mark_email_read_rounded,
               color: AppColors.primary,
               size: 32,
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Confirm your new email', style: AppTextStyles.title),
+          Text('Confirm your new email', style: AppTextStyles.title),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),

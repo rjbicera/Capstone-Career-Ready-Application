@@ -91,9 +91,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 20),
 
               if (!_isSent) ...[
-                const Text('Forgot password?', style: AppTextStyles.headline),
+                Text('Forgot password?', style: AppTextStyles.headline),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Enter your email and we\'ll send you a link to reset it.',
                   style: AppTextStyles.body,
                 ),
@@ -105,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Email', style: AppTextStyles.caption),
+                      Text('Email', style: AppTextStyles.caption),
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _emailController,
@@ -122,7 +122,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 10),
                   Text(
                     _errorText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.danger,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -153,18 +153,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         Container(
                           width: 72,
                           height: 72,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.primaryLight,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.mark_email_read_rounded,
                             color: AppColors.primary,
                             size: 32,
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           'Check your inbox',
                           style: AppTextStyles.title,
                         ),

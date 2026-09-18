@@ -108,7 +108,7 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Saved resumes',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -116,7 +116,7 @@ class _SavedResumesScreenState extends State<SavedResumesScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: _resumes.isEmpty
@@ -157,7 +157,7 @@ class _ResumeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.card,
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -183,7 +183,7 @@ class _ResumeTile extends StatelessWidget {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.description_rounded,
                   color: AppColors.primary,
                   size: 20,
@@ -200,7 +200,7 @@ class _ResumeTile extends StatelessWidget {
                           child: Text(
                             resume.fileName,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
@@ -218,7 +218,7 @@ class _ResumeTile extends StatelessWidget {
                               color: AppColors.primaryLight,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Active',
                               style: TextStyle(
                                 fontSize: 9.5,
@@ -243,7 +243,7 @@ class _ResumeTile extends StatelessWidget {
               ),
               Text(
                 resume.score > 0 ? '${resume.score}' : '—',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: AppColors.blue,
@@ -268,7 +268,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.folder_open_rounded,
               size: 40,
               color: AppColors.textMuted,

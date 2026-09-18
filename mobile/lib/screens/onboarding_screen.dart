@@ -29,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  static const _slides = [
+  static final _slides = [
     _OnboardSlide(
       icon: Icons.check_circle_outline,
       iconBg: AppColors.blueLight,

@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 displayName.isNotEmpty
                                     ? displayName[0].toUpperCase()
                                     : '?',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.blue,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -151,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.card,
                       borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: AppColors.border),
                     ),
@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   value: value,
                                   strokeWidth: 6,
                                   backgroundColor: AppColors.border,
-                                  valueColor: const AlwaysStoppedAnimation(
+                                  valueColor: AlwaysStoppedAnimation(
                                     AppColors.primary,
                                   ),
                                 ),
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Overall readiness',
                               style: AppTextStyles.caption,
                             ),
@@ -187,12 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               TextSpan(
                                 text:
                                     '${(state.overallReadiness * 100).round()}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.textPrimary,
                                 ),
-                                children: const [
+                                children: [
                                   TextSpan(
                                     text: '%',
                                     style: TextStyle(
@@ -214,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Continue prep', style: AppTextStyles.title),
+                      Text('Continue prep', style: AppTextStyles.title),
                       Text(
                         'swipe →',
                         style: AppTextStyles.caption.copyWith(
@@ -266,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const Spacer(),
                                   Text(
                                     card.title,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,

@@ -159,13 +159,13 @@ class LegalDocumentScreen extends StatelessWidget {
         elevation: 0,
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: ListView(
@@ -186,7 +186,7 @@ class LegalDocumentScreen extends StatelessWidget {
                   children: [
                     Text(
                       section.heading,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,

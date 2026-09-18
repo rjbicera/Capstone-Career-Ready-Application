@@ -28,8 +28,8 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 66,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppColors.card,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(

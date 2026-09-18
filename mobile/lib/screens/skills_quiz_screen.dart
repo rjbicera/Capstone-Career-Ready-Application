@@ -334,7 +334,7 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
         appBar: AppBar(
           backgroundColor: AppColors.background,
           elevation: 0,
-          iconTheme: const IconThemeData(color: AppColors.textPrimary),
+          iconTheme: IconThemeData(color: AppColors.textPrimary),
         ),
         body: const Center(
           child: Text('No questions available for this category yet.'),
@@ -356,14 +356,14 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
                   Container(
                     width: 84,
                     height: 84,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         '$scorePercent%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
@@ -407,13 +407,13 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
         elevation: 0,
         title: Text(
           widget.category,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 16,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: Padding(
@@ -432,14 +432,14 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
                   value: progress,
                   minHeight: 6,
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
                 ),
               ),
               const SizedBox(height: 24),
 
               Text(
                 question.text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   height: 1.4,
@@ -454,14 +454,14 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
                 final hasAnswered = _selectedOption != null;
 
                 Color borderColor = AppColors.border;
-                Color bgColor = Colors.white;
+                Color bgColor = AppColors.card;
                 if (hasAnswered) {
                   if (isCorrect) {
                     borderColor = AppColors.primary;
                     bgColor = AppColors.primaryLight;
                   } else if (isSelected && !isCorrect) {
                     borderColor = AppColors.danger;
-                    bgColor = const Color(0xFFFCEBEB);
+                    bgColor = AppColors.dangerSoft;
                   }
                 }
 
@@ -487,7 +487,7 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
                             Expanded(
                               child: Text(
                                 question.options[index],
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
@@ -495,10 +495,10 @@ class _SkillsQuizScreenState extends State<SkillsQuizScreen> {
                               ),
                             ),
                             if (hasAnswered && isCorrect)
-                              const Icon(Icons.check_circle_rounded,
+                              Icon(Icons.check_circle_rounded,
                                   size: 18, color: AppColors.primary),
                             if (hasAnswered && isSelected && !isCorrect)
-                              const Icon(Icons.cancel_rounded,
+                              Icon(Icons.cancel_rounded,
                                   size: 18, color: AppColors.danger),
                           ],
                         ),

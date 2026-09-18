@@ -153,7 +153,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Change password',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -161,7 +161,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             fontSize: 17,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -172,7 +172,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Choose a strong password you don\'t use anywhere else.',
                   style: AppTextStyles.body,
                 ),
@@ -212,7 +212,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 if (_errorText != null) ...[
                   Text(
                     _errorText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.danger,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
