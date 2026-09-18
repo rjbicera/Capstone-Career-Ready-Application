@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+
 import '../theme/app_theme.dart';
 import '../state/app_state.dart';
 import '../widgets/app_background.dart';
+import '../theme/theme_controller.dart';
 
 class _Suggestion {
   const _Suggestion({
@@ -35,10 +37,27 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Listen for theme changes
+    ThemeController.instance.addListener(_onThemeChanged);
+
     // Prefer whatever is already in shared state (e.g. set by a
     // previous upload or by Saved Resumes) over the constructor default,
     // so this screen doesn't show stale data after navigating back to it.
     _displayScore = AppState.instance.resumeScore ?? widget.score;
+  }
+
+  @override
+  void dispose() {
+    // Remove the theme listener when the screen is disposed.
+    ThemeController.instance.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   // Formatting/Clarity tips are field-agnostic; the Keywords tip is the
@@ -68,6 +87,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
 
   Future<void> _handleUpload() async {
     List<PlatformFile> result;
+
     try {
       result = await FilePicker.pickFiles(
         type: FileType.custom,
@@ -75,15 +95,18 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Couldn\'t open file picker: $e')));
+      ).showSnackBar(SnackBar(content: Text("Couldn't open file picker: $e")));
+
       return;
     }
 
     if (result.isEmpty) return;
 
     final picked = result.single;
+
     setState(() {
       _uploadedFileName = picked.name;
       _isUploading = true;
@@ -93,14 +116,18 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
     // (multer endpoint per SDD) + AI analysis call. Score below is a
     // placeholder stand-in until that endpoint returns a real one.
     await Future.delayed(const Duration(milliseconds: 1200));
+
     if (!mounted) return;
 
     const placeholderScore = 78; // TODO: replace with real AI score.
+
     setState(() {
       _isUploading = false;
       _displayScore = placeholderScore;
     });
+
     AppState.instance.setResume(score: placeholderScore, fileName: picked.name);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('"$_uploadedFileName" uploaded — analyzing.')),
     );
@@ -135,8 +162,11 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
+
                 const _GradientHeading('Smart feedback for your dream job'),
+
                 const SizedBox(height: 8),
+
                 Center(
                   child: Text(
                     'Drop your resume for an ATS score and improvement tips.',
@@ -144,6 +174,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     style: AppTextStyles.body,
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
                 Container(
@@ -163,7 +194,9 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                           color: AppColors.blue,
                         ),
                       ),
+
                       const SizedBox(height: 6),
+
                       Text.rich(
                         TextSpan(
                           text: '$_displayScore',
@@ -187,6 +220,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 22),
 
                 if (_uploadedFileName != null) ...[
@@ -206,7 +240,9 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                           size: 18,
                           color: AppColors.primary,
                         ),
+
                         const SizedBox(width: 10),
+
                         Expanded(
                           child: Text(
                             _uploadedFileName!,
@@ -217,6 +253,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                             ),
                           ),
                         ),
+
                         if (_isUploading)
                           SizedBox(
                             width: 16,
@@ -240,6 +277,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                 ],
 
                 Text('AI improvement tips', style: AppTextStyles.title),
+
                 const SizedBox(height: 10),
 
                 ..._suggestions.map(
@@ -273,7 +311,9 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 8),
+
                         Text(
                           s.text,
                           style: AppTextStyles.body.copyWith(
@@ -286,6 +326,7 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 8),
 
                 Container(
@@ -303,17 +344,20 @@ class _ResumeAnalysisScreenState extends State<ResumeAnalysisScreen> {
                         color: AppColors.blue,
                         size: 32,
                       ),
+
                       const SizedBox(height: 8),
+
                       Text(
                         'Upload your latest resume',
                         style: AppTextStyles.title,
                       ),
+
                       const SizedBox(height: 4),
-                      Text(
-                        'PDF, DOC, or DOCX',
-                        style: AppTextStyles.caption,
-                      ),
+
+                      Text('PDF, DOC, or DOCX', style: AppTextStyles.caption),
+
                       const SizedBox(height: 14),
+
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(

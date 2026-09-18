@@ -7,6 +7,7 @@ import 'saved_resumes_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import '../services/auth_api_service.dart';
+import '../theme/theme_controller.dart';
 
 class _MenuAction {
   const _MenuAction({
@@ -102,10 +103,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.bug_report_outlined,
-                  color: AppColors.blue,
-                ),
+                leading: Icon(Icons.bug_report_outlined, color: AppColors.blue),
                 title: const Text('Report a bug'),
                 onTap: () {
                   // TODO: open bug report form.
@@ -227,8 +225,18 @@ class ProfileScreen extends StatelessWidget {
     final parsed = DateTime.tryParse(isoDate);
     if (parsed == null) return 'Member';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return 'Member since ${months[parsed.month - 1]} ${parsed.year}';
   }
@@ -239,7 +247,10 @@ class ProfileScreen extends StatelessWidget {
     // profile saves — so this screen always reflects the signed-in
     // user instead of a fixed placeholder.
     return ListenableBuilder(
-      listenable: AppState.instance,
+      listenable: Listenable.merge([
+        AppState.instance,
+        ThemeController.instance,
+      ]),
       builder: (context, _) {
         final state = AppState.instance;
         final userName = state.fullName ?? state.displayName;

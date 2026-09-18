@@ -5,6 +5,7 @@ import '../widgets/app_background.dart';
 import 'resume_analysis_screen.dart';
 import 'mock_interview_screen.dart';
 import 'skills_assessment_screen.dart';
+import '../theme/theme_controller.dart';
 
 class _ProgressCard {
   const _ProgressCard({
@@ -95,7 +96,10 @@ class _HomeScreenState extends State<HomeScreen> {
     // callback needed. This is also what makes the greeting below
     // pick up nickname changes made on the Edit profile screen.
     return ListenableBuilder(
-      listenable: AppState.instance,
+      listenable: Listenable.merge([
+        AppState.instance,
+        ThemeController.instance,
+      ]),
       builder: (context, _) {
         final state = AppState.instance;
         final cards = _buildCards(context, state);

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 import '../state/app_state.dart';
 import 'skills_assessment_screen.dart';
+import '../theme/theme_controller.dart';
 
 class MockInterviewScreen extends StatefulWidget {
   const MockInterviewScreen({super.key});
@@ -11,8 +13,6 @@ class MockInterviewScreen extends StatefulWidget {
 }
 
 class _MockInterviewScreenState extends State<MockInterviewScreen> {
-  // Shared across both programs — general behavioral questions that
-  // don't depend on the candidate's field.
   static const _sharedQuestions = [
     'Describe a project where you worked as part of a team.',
     'What is a weakness you\'re actively working on?',
@@ -34,19 +34,32 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
   ];
 
   late final List<String> _questions;
-
   int _currentQuestion = 0;
   bool _isRecording = false;
 
   @override
   void initState() {
     super.initState();
+
+    ThemeController.instance.addListener(_onThemeChanged);
+
     final courseQuestions = AppState.instance.course == 'BSBA'
         ? _bsbaQuestions
         : _bsitQuestions;
-    // Interleave course-specific questions first, then the shared set,
-    // mirroring the original ordering (field-specific up front).
+
     _questions = [...courseQuestions, ..._sharedQuestions];
+  }
+
+  @override
+  void dispose() {
+    ThemeController.instance.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _nextQuestion() {
@@ -59,13 +72,12 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
   }
 
   void _finishInterview() {
-    // Was previously a dead button (onPressed: null on the last
-    // question) — now actually records completion and lets the user
-    // know before sending them back.
     AppState.instance.recordInterviewCompleted();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Interview session completed.')),
     );
+
     Navigator.of(context).maybePop();
   }
 
@@ -81,9 +93,6 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Same rule as Resume Analysis: only show a back button
-              // when this screen was pushed on top of something (from
-              // Home's dashboard card) — hidden on the bottom-nav tab.
               if (Navigator.of(context).canPop()) ...[
                 IconButton(
                   onPressed: () => Navigator.of(context).maybePop(),
@@ -97,15 +106,20 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                 ),
                 const SizedBox(height: 8),
               ],
+
               Text('Mock interview', style: AppTextStyles.headline),
+
               const SizedBox(height: 4),
+
               Text(
                 'Question ${_currentQuestion + 1} of ${_questions.length}',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textMuted,
                 ),
               ),
+
               const SizedBox(height: 16),
+
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -115,6 +129,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   valueColor: AlwaysStoppedAnimation(AppColors.blue),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               Expanded(
@@ -138,11 +153,16 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               Center(
                 child: GestureDetector(
-                  onTap: () => setState(() => _isRecording = !_isRecording),
+                  onTap: () {
+                    setState(() {
+                      _isRecording = !_isRecording;
+                    });
+                  },
                   child: Container(
                     width: 58,
                     height: 58,
@@ -158,7 +178,9 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 8),
+
               Center(
                 child: Text(
                   _isRecording
@@ -169,6 +191,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               Row(
@@ -185,7 +208,9 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                       child: const Text('View skills'),
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
