@@ -25,6 +25,7 @@ class AppPalette {
     required this.border,
     required this.danger,
     required this.dangerSoft,
+    required this.headlineGradient,
   });
 
   final Brightness brightness;
@@ -56,6 +57,12 @@ class AppPalette {
   /// Tinted fill used behind destructive or incorrect states.
   final Color dangerSoft;
 
+  /// Stops for the hero headline's gradient text (e.g. "Smart feedback
+  /// for your dream job"). Kept per-palette because a fixed near-black
+  /// middle stop reads fine on a light card but disappears against a
+  /// dark one.
+  final List<Color> headlineGradient;
+
   bool get isDark => brightness == Brightness.dark;
 }
 
@@ -78,6 +85,7 @@ const AppPalette lightPalette = AppPalette(
   border: Color(0xFFE4E7EC),
   danger: Color(0xFFD95D79),
   dangerSoft: Color(0xFFFCEBEB),
+  headlineGradient: [Color(0xFFAB8C95), Color(0xFF171717), Color(0xFF6F78D8)],
 );
 
 /// A companion dark palette. Brand indigo is kept so buttons and links
@@ -99,4 +107,5 @@ const AppPalette darkPalette = AppPalette(
   border: Color(0xFF33313D),
   danger: Color(0xFFE8799B),
   dangerSoft: Color(0xFF3A2530),
+  headlineGradient: [Color(0xFFD9B7BF), Color(0xFFF3F4F8), Color(0xFFA8B0FF)],
 );

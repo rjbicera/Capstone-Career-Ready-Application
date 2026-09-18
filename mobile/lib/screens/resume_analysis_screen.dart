@@ -389,21 +389,31 @@ class _GradientHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShaderMask(
-      blendMode: BlendMode.srcIn,
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [Color(0xFFAB8C95), Color(0xFF171717), Color(0xFF6F78D8)],
-      ).createShader(bounds),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 30,
-          height: 1.12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.8,
-        ),
-      ),
+    // The gradient stops (and this widget's own colors generally) come
+    // from AppColors, which resolves against a plain global variable
+    // rather than an InheritedWidget — so it needs its own listener to
+    // repaint the moment Dark mode is toggled, instead of waiting for
+    // an unrelated rebuild to pick up the new palette.
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        return ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: AppColors.headlineGradient,
+          ).createShader(bounds),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 30,
+              height: 1.12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+            ),
+          ),
+        );
+      },
     );
   }
 }

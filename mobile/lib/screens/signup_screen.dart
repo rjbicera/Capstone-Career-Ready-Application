@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_api_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/app_background.dart';
 import 'demographic_profile_screen.dart';
 import 'main_navigation.dart';
@@ -162,6 +163,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       return;
     }
+
+    // Switch to this account's own Dark mode choice (default light if
+    // they've never set one) before showing them any authenticated
+    // screen, so a previous account's setting on this device never
+    // leaks over.
+    await ThemeController.instance.loadForUser(user.uid);
 
     try {
       // Get the Firebase ID token.
@@ -475,10 +482,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   const SizedBox(height: 12),
 
-                  Text(
-                    'Create your account',
-                    style: AppTextStyles.headline,
-                  ),
+                  Text('Create your account', style: AppTextStyles.headline),
 
                   const SizedBox(height: 6),
 

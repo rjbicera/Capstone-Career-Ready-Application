@@ -256,9 +256,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await BiometricService.setEnabled(true);
     if (!mounted) return;
     setState(() => _biometricLogin = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Biometric login enabled.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Biometric login enabled.')));
   }
 
   // ------------------------------------------------------------
@@ -470,6 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await AuthApiService.signOut();
       await BiometricService.setEnabled(false);
       AppState.instance.clearProfile();
+      await ThemeController.instance.loadForUser(null);
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(

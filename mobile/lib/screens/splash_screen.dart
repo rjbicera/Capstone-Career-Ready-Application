@@ -4,6 +4,7 @@ import '../services/auth_api_service.dart';
 import '../services/biometric_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/logo_mark.dart';
 import '../widgets/app_background.dart';
 import 'main_navigation.dart';
@@ -65,6 +66,11 @@ class _SplashScreenState extends State<SplashScreen>
       return;
     }
 
+    // A restored session belongs to a specific account, so load that
+    // account's own Dark mode choice rather than whatever the guest
+    // slot (or a previous account on this device) had set.
+    await ThemeController.instance.loadForUser(user.uid);
+
     final biometricEnabled = await BiometricService.isEnabled();
     if (biometricEnabled) {
       final ok = await BiometricService.authenticate(
@@ -75,6 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
         // them past a lock they explicitly turned on.
         await AuthApiService.signOut();
         AppState.instance.clearProfile();
+        await ThemeController.instance.loadForUser(null);
         _go(const OnboardingScreen());
         return;
       }
@@ -162,9 +169,7 @@ class _SplashScreenState extends State<SplashScreen>
                         value: _progress.value,
                         minHeight: 4,
                         backgroundColor: AppColors.card.withValues(alpha: 0.65),
-                        valueColor: AlwaysStoppedAnimation(
-                          AppColors.primary,
-                        ),
+                        valueColor: AlwaysStoppedAnimation(AppColors.primary),
                       ),
                     ),
                   );

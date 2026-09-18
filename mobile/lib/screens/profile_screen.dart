@@ -159,6 +159,10 @@ class ProfileScreen extends StatelessWidget {
               // Drop the previous user's profile so it can't flash on
               // screen for whoever signs in next on this device.
               AppState.instance.clearProfile();
+              // Same for their Dark mode choice — back to the guest
+              // default until the next account signs in and its own
+              // preference (if any) is loaded.
+              await ThemeController.instance.loadForUser(null);
               if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

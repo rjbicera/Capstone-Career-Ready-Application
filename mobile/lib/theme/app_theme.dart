@@ -43,6 +43,8 @@ class AppColors {
 
   /// Fill used behind incorrect/destructive states (e.g. a wrong quiz answer).
   static Color get dangerSoft => activePalette.dangerSoft;
+
+  static List<Color> get headlineGradient => activePalette.headlineGradient;
 }
 
 class AppRadius {
@@ -114,10 +116,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           elevation: 0,
         ),
       ),
@@ -129,10 +128,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(26),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -165,9 +161,7 @@ class AppTheme {
       // dropdown on the sign-up screen, and the logout confirmation
       // dialog on profile). Pin these back to an opaque card explicitly.
       dropdownMenuTheme: DropdownMenuThemeData(
-        menuStyle: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(p.card),
-        ),
+        menuStyle: MenuStyle(backgroundColor: WidgetStateProperty.all(p.card)),
       ),
       popupMenuTheme: PopupMenuThemeData(color: p.card),
       dialogTheme: DialogThemeData(

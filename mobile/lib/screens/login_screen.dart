@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/app_background.dart';
 import '../services/auth_api_service.dart';
 import '../state/app_state.dart';
@@ -94,6 +95,12 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       return;
     }
+
+    // Switch to this account's own Dark mode choice (default light if
+    // they've never set one) before showing them any authenticated
+    // screen, so a previous account's setting on this device never
+    // leaks over.
+    await ThemeController.instance.loadForUser(currentUser.uid);
 
     try {
       // Get the Firebase ID token for the authenticated user.

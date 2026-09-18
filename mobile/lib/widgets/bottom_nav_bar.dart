@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 
 class NavItem {
   const NavItem({required this.icon, required this.label});
@@ -26,41 +27,52 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 66,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(_items.length, (index) {
-          final item = _items[index];
-          final isActive = index == currentIndex;
-          final color = isActive ? AppColors.primary : AppColors.textMuted;
+    // AppColors resolves against a plain global variable (activePalette),
+    // not an InheritedWidget, so it never repaints this bar on its own.
+    // MainNavigation only rebuilds it when a tab is tapped, which is why
+    // the nav bar used to lag a tap behind the theme toggle. Listening to
+    // ThemeController here directly fixes that: this widget now repaints
+    // the instant the palette changes, independent of its parent.
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        return Container(
+          height: 66,
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final isActive = index == currentIndex;
+              final color = isActive ? AppColors.primary : AppColors.textMuted;
 
-          return Expanded(
-            child: InkWell(
-              onTap: () => onTap(index),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(item.icon, size: 22, color: color),
-                  const SizedBox(height: 3),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+              return Expanded(
+                child: InkWell(
+                  onTap: () => onTap(index),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(item.icon, size: 22, color: color),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }
