@@ -4,6 +4,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -206,6 +207,55 @@ class AuthApiService {
     }
   }
 
+  // ============================================================
+  // RESUME ANALYSIS
+  // ============================================================
+
+  /// Uploads one PDF resume to the backend for temporary processing and
+  /// AI analysis. The original PDF is not stored permanently by Career Ready.
+  static Future<Map<String, dynamic>> analyzeResume({
+    required String idToken,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/resumes/analyze'),
+      );
+
+      request.headers['Authorization'] = 'Bearer $idToken';
+
+      final appCheckToken = await FirebaseAppCheck.instance.getToken();
+
+      if (appCheckToken != null && appCheckToken.isNotEmpty) {
+        request.headers['X-Firebase-AppCheck'] = appCheckToken;
+      }
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'resume',
+          fileBytes,
+          filename: fileName,
+          contentType: MediaType('application', 'pdf'),
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('Unable to upload and analyze the resume.');
+    }
+  }
   // ============================================================
   // EXPORT MY DATA (Settings)
   // ============================================================

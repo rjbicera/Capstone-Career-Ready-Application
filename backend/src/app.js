@@ -202,7 +202,7 @@ app.use("/api/v1/auth", require("./routes/authRoutes"));
 */
 app.use("/api/v1/admin", require("./routes/adminRoutes"));
 // app.use("/api/v1/profile", require("./routes/profileRoutes"));
-// app.use("/api/v1/resumes", require("./routes/resumeRoutes"));
+app.use("/api/v1/resumes", require("./routes/resumeRoutes"));
 // app.use("/api/v1/interview", require("./routes/interviewRoutes"));
 // app.use("/api/v1/assessments", require("./routes/assessmentRoutes"));
 // app.use("/api/v1/dashboard", require("./routes/dashboardRoutes"));
