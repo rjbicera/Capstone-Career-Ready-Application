@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { authMiddleware, requireStudent } = require('../middleware/authMiddleware');
-const { analyzeResume, MAX_FILE_SIZE_BYTES } = require('../controllers/resumeController');
+const { analyzeResume, getResumeStatus, deleteResume, getLatestResume, listResumes, MAX_FILE_SIZE_BYTES } = require('../controllers/resumeController');
 
 const router = express.Router();
 
@@ -34,6 +34,7 @@ const upload = multer({
   },
 });
 
+// Global rate limiter (per hour) - kept as safety net
 const resumeAnalysisLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
@@ -56,6 +57,10 @@ const resumeAnalysisLimiter = rateLimit({
   },
 });
 
+// GET /api/v1/resumes/status - Check daily limit
+router.get('/status', authMiddleware, requireStudent, getResumeStatus);
+
+// POST /api/v1/resumes/analyze - Analyze resume (with daily limit enforced in controller)
 router.post(
   '/analyze',
   authMiddleware,
@@ -88,5 +93,14 @@ router.post(
   },
   analyzeResume,
 );
+
+// GET /api/v1/resumes/latest - Get latest completed resume analysis
+router.get('/latest', authMiddleware, requireStudent, getLatestResume);
+
+// GET /api/v1/resumes - List all completed resume analyses for current user
+router.get('/', authMiddleware, requireStudent, listResumes);
+
+// DELETE /api/v1/resumes/:resumeId - Delete a resume analysis
+router.delete('/:resumeId', authMiddleware, requireStudent, deleteResume);
 
 module.exports = router;

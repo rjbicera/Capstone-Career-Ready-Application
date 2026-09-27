@@ -6,7 +6,9 @@ const { db } = require("../config/firebaseAdmin");
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPE = "application/pdf";
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+const MAX_DAILY_ANALYSES = 2;
+const TIME_ZONE = process.env.RESUME_TIME_ZONE || "Asia/Manila";
 
 function normalizeAnalysis(raw) {
   const clampScore = (value) => {
@@ -120,9 +122,45 @@ Return ONLY valid JSON matching this structure:
 Scores must be integers from 0 to 100. Do not score based on personal identity characteristics or protected characteristics. Do not infer sensitive traits.`;
 }
 
+// Helper: get current date in configured timezone
+function getTodayString() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(now); // YYYY-MM-DD
+}
+
+// Check and increment daily analysis count transactionally
+async function checkAndIncrementDailyLimit(uid) {
+  const today = getTodayString();
+  const dailyRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("resumeAnalysisDaily")
+    .doc(today);
+
+  let newCount = 0;
+  await db.runTransaction(async (transaction) => {
+    const dailyDoc = await transaction.get(dailyRef);
+    const currentCount = dailyDoc.exists ? (dailyDoc.data().count || 0) : 0;
+
+    if (currentCount >= MAX_DAILY_ANALYSES) {
+      throw new Error("DAILY_LIMIT_REACHED");
+    }
+
+    newCount = currentCount + 1;
+    transaction.set(dailyRef, { count: newCount, updatedAt: new Date() }, { merge: true });
+  });
+
+  return newCount;
+}
+
 async function analyzeResume(req, res) {
   let tempFilePath = null;
-  let resumeRef = null;
 
   try {
     if (!req.file) {
@@ -180,25 +218,22 @@ async function analyzeResume(req, res) {
       });
     }
 
-    const resumeId = crypto.randomUUID();
-    resumeRef = db
-      .collection("users")
-      .doc(req.uid)
-      .collection("resumes")
-      .doc(resumeId);
+    // Check daily limit BEFORE doing any AI processing
+    try {
+      await checkAndIncrementDailyLimit(req.uid);
+    } catch (limitErr) {
+      if (limitErr.message === "DAILY_LIMIT_REACHED") {
+        return res.status(429).json({
+          error: {
+            code: "DAILY_LIMIT_REACHED",
+            message: "Daily resume analysis limit reached (2 per day). Try again tomorrow.",
+          },
+        });
+      }
+      throw limitErr;
+    }
 
-    const now = new Date().toISOString();
-    await resumeRef.set({
-      resumeId,
-      uid: req.uid,
-      originalFilename: path.basename(req.file.originalname),
-      contentType: ALLOWED_MIME_TYPE,
-      sizeBytes: req.file.size,
-      analysisStatus: "analyzing",
-      uploadedAt: now,
-      analysisAt: null,
-    });
-
+    // Process with Gemini
     const pdfBytes = await fs.readFile(tempFilePath);
     const pdfBase64 = pdfBytes.toString("base64");
 
@@ -223,10 +258,25 @@ async function analyzeResume(req, res) {
     const responseText = result.response.text();
     const analysis = normalizeAnalysis(parseGeminiJson(responseText));
 
-    await resumeRef.update({
+    // ONLY create Firestore document on SUCCESSFUL analysis
+    const resumeId = crypto.randomUUID();
+    const resumeRef = db
+      .collection("users")
+      .doc(req.uid)
+      .collection("resumes")
+      .doc(resumeId);
+
+    const now = new Date().toISOString();
+    await resumeRef.set({
+      resumeId,
+      uid: req.uid,
+      originalFilename: path.basename(req.file.originalname),
+      contentType: ALLOWED_MIME_TYPE,
+      sizeBytes: req.file.size,
       analysisStatus: "completed",
       analysis,
-      analysisAt: new Date().toISOString(),
+      uploadedAt: now,
+      analysisAt: now,
     });
 
     return res.status(201).json({
@@ -239,33 +289,21 @@ async function analyzeResume(req, res) {
         analysisStatus: "completed",
         analysis,
       },
+      dailyAnalysesUsed: await getDailyCount(req.uid),
+      dailyLimit: MAX_DAILY_ANALYSES,
     });
   } catch (err) {
     console.error("Resume analysis failed:", err.message);
 
-    if (resumeRef) {
-      try {
-        await resumeRef.update({
-          analysisStatus: "failed",
-          analysisError: "Resume analysis could not be completed.",
-          analysisAt: new Date().toISOString(),
-        });
-      } catch (updateErr) {
-        console.error(
-          "Failed to update resume analysis status:",
-          updateErr.message,
-        );
-      }
-    }
-
+    // NO Firestore document created on failure - PDF was never saved to DB
     return res.status(502).json({
       error: {
         code: "RESUME_ANALYSIS_FAILED",
-        message:
-          "Resume analysis could not be completed. Please try again later.",
+        message: "Resume analysis could not be completed. Please try again later.",
       },
     });
   } finally {
+    // Always cleanup temp file
     if (tempFilePath) {
       try {
         await fs.unlink(tempFilePath);
@@ -278,7 +316,156 @@ async function analyzeResume(req, res) {
   }
 }
 
+async function getDailyCount(uid) {
+  const today = getTodayString();
+  const dailyRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("resumeAnalysisDaily")
+    .doc(today);
+  const doc = await dailyRef.get();
+  return doc.exists ? (doc.data().count || 0) : 0;
+}
+
+// GET /api/v1/resumes/status - Check daily limit status
+async function getResumeStatus(req, res) {
+  try {
+    const today = getTodayString();
+    const dailyRef = db
+      .collection("users")
+      .doc(req.uid)
+      .collection("resumeAnalysisDaily")
+      .doc(today);
+    const dailyDoc = await dailyRef.get();
+    const used = dailyDoc.exists ? (dailyDoc.data().count || 0) : 0;
+
+    return res.status(200).json({
+      analysesUsed: used,
+      analysesRemaining: Math.max(0, MAX_DAILY_ANALYSES - used),
+      maxAnalyses: MAX_DAILY_ANALYSES,
+    });
+  } catch (err) {
+    console.error("Resume status error:", err.message);
+    return res.status(500).json({
+      error: { code: "STATUS_FAILED", message: "Unable to get resume analysis status." },
+    });
+  }
+}
+
+// DELETE /api/v1/resumes/:resumeId - User deletes their own resume analysis
+async function deleteResume(req, res) {
+  try {
+    const { resumeId } = req.params;
+
+    const resumeRef = db
+      .collection("users")
+      .doc(req.uid)
+      .collection("resumes")
+      .doc(resumeId);
+
+    const doc = await resumeRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({
+        error: { code: "RESUME_NOT_FOUND", message: "Resume analysis not found." },
+      });
+    }
+
+    await resumeRef.delete();
+
+    return res.status(200).json({ deleted: true, resumeId });
+  } catch (err) {
+    console.error("Delete resume error:", err.message);
+    return res.status(500).json({
+      error: { code: "DELETE_FAILED", message: "Unable to delete resume analysis." },
+    });
+  }
+}
+
+// GET /api/v1/resumes/latest - Get latest completed resume analysis
+async function getLatestResume(req, res) {
+  try {
+    const resumesRef = db
+      .collection("users")
+      .doc(req.uid)
+      .collection("resumes");
+    const snapshot = await resumesRef
+      .where("analysisStatus", "==", "completed")
+      .orderBy("analysisAt", "desc")
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({
+        error: { code: "NO_RESUME_FOUND", message: "No completed resume analysis found." },
+      });
+    }
+
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    return res.status(200).json({
+      resume: {
+        resumeId: doc.id,
+        originalFilename: data.originalFilename,
+        contentType: data.contentType,
+        sizeBytes: data.sizeBytes,
+        uploadedAt: data.uploadedAt,
+        analysisStatus: data.analysisStatus,
+        analysisAt: data.analysisAt,
+        analysis: data.analysis,
+      },
+    });
+  } catch (err) {
+    console.error("Get latest resume error:", err.message);
+    return res.status(500).json({
+      error: { code: "FETCH_FAILED", message: "Unable to fetch latest resume analysis." },
+    });
+  }
+}
+
+// GET /api/v1/resumes - List all completed resume analyses for current user
+async function listResumes(req, res) {
+  try {
+    const resumesRef = db
+      .collection("users")
+      .doc(req.uid)
+      .collection("resumes");
+    const snapshot = await resumesRef
+      .where("analysisStatus", "==", "completed")
+      .orderBy("analysisAt", "desc")
+      .limit(50)
+      .get();
+
+    const resumes = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        resumeId: doc.id,
+        originalFilename: data.originalFilename,
+        contentType: data.contentType,
+        sizeBytes: data.sizeBytes,
+        uploadedAt: data.uploadedAt,
+        analysisStatus: data.analysisStatus,
+        analysisAt: data.analysisAt,
+        analysis: data.analysis,
+      };
+    });
+
+    return res.status(200).json({ resumes });
+  } catch (err) {
+    console.error("List resumes error:", err.message);
+    return res.status(500).json({
+      error: { code: "FETCH_FAILED", message: "Unable to fetch resume list." },
+    });
+  }
+}
+
 module.exports = {
   analyzeResume,
+  getResumeStatus,
+  deleteResume,
+  getLatestResume,
+  listResumes,
   MAX_FILE_SIZE_BYTES,
+  MAX_DAILY_ANALYSES,
+  TIME_ZONE,
 };

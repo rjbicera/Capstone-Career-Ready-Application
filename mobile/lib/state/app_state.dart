@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../services/auth_api_service.dart';
 
 /// Single in-memory source of truth for cross-screen data.
 ///
@@ -59,6 +60,8 @@ class AppState extends ChangeNotifier {
     // them on sign-out too, or a different course's categories on the
     // next login would sit alongside stale ones from this session.
     skillsProgress.clear();
+    // Also clear resume data so it doesn't leak to the next user
+    clearResume();
     notifyListeners();
   }
 
@@ -89,11 +92,74 @@ class AppState extends ChangeNotifier {
   // ---- Resume ----
   int? resumeScore; // null = no resume analyzed yet
   String? resumeFileName;
+  String? resumeSummary;
+  List<String> resumeStrengths = [];
+  List<String> resumeWeaknesses = [];
+  List<String> resumeSkills = [];
+  List<String> resumeMissingSkills = [];
+  List<Map<String, dynamic>> resumeFeedback = [];
 
-  void setResume({required int score, required String fileName}) {
+  void setResume({
+    required int score,
+    required String fileName,
+    String? summary,
+    List<String>? strengths,
+    List<String>? weaknesses,
+    List<String>? skills,
+    List<String>? missingSkills,
+    List<Map<String, dynamic>>? feedback,
+  }) {
     resumeScore = score;
     resumeFileName = fileName;
+    resumeSummary = summary;
+    resumeStrengths = strengths ?? [];
+    resumeWeaknesses = weaknesses ?? [];
+    resumeSkills = skills ?? [];
+    resumeMissingSkills = missingSkills ?? [];
+    resumeFeedback = feedback ?? [];
     notifyListeners();
+  }
+
+  /// Clears resume data (e.g., on sign-out or when user deletes resume)
+  void clearResume() {
+    resumeScore = null;
+    resumeFileName = null;
+    resumeSummary = null;
+    resumeStrengths = [];
+    resumeWeaknesses = [];
+    resumeSkills = [];
+    resumeMissingSkills = [];
+    resumeFeedback = [];
+    notifyListeners();
+  }
+
+  /// Loads the latest completed resume analysis from the backend
+  Future<void> loadLatestResumeAnalysis({
+    required String idToken,
+  }) async {
+    try {
+      final response = await AuthApiService.getLatestResume(idToken: idToken);
+      final resume = response['resume'] as Map<String, dynamic>?;
+      if (resume != null) {
+        final analysis = resume['analysis'] as Map<String, dynamic>?;
+        if (analysis != null) {
+          setResume(
+            score: (analysis['overallScore'] as num?)?.round() ?? 0,
+            fileName: resume['originalFilename'] as String? ?? 'resume.pdf',
+            summary: analysis['summary'] as String?,
+            strengths: (analysis['strengths'] as List?)?.cast<String>(),
+            weaknesses: (analysis['weaknesses'] as List?)?.cast<String>(),
+            skills: (analysis['skills'] as List?)?.cast<String>(),
+            missingSkills: (analysis['missingSkills'] as List?)?.cast<String>(),
+            feedback: (analysis['feedback'] as List?)?.cast<Map<String, dynamic>>(),
+          );
+        }
+      }
+    } catch (e) {
+      // 404 = no resume yet, which is fine
+      if (e.toString().contains('NO_RESUME_FOUND')) return;
+      debugPrint('Failed to load latest resume: $e');
+    }
   }
 
   // ---- Mock interview ----

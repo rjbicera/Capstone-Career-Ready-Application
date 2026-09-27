@@ -256,6 +256,212 @@ class AuthApiService {
       throw NetworkException('Unable to upload and analyze the resume.');
     }
   }
+
+  /// Get resume analysis daily limit status
+  static Future<Map<String, dynamic>> getResumeStatus({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/resumes/status'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Get all completed resume analyses for current user
+  static Future<List<Map<String, dynamic>>> getResumes({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/resumes'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      final body = _handleResponse(response);
+      final resumes = body['resumes'] as List<dynamic>? ?? [];
+      return resumes.cast<Map<String, dynamic>>();
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Get the latest completed resume analysis
+  static Future<Map<String, dynamic>> getLatestResume({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/resumes/latest'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Delete a resume analysis
+  static Future<void> deleteResume({
+    required String idToken,
+    required String resumeId,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/resumes/$resumeId'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  // ============================================================
+  // MOCK INTERVIEW
+  // ============================================================
+
+  /// Get interview status (readiness + daily attempts)
+  static Future<Map<String, dynamic>> getInterviewStatus({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/interview/status'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Start a new mock interview session
+  static Future<Map<String, dynamic>> startInterview({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/interview/start'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Complete an interview session with final score
+  static Future<Map<String, dynamic>> completeInterview({
+    required String idToken,
+    required String sessionId,
+    required int overallScore,
+    String? summary,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/interview/$sessionId/complete'),
+        headers: await _securityHeaders(idToken: idToken),
+        body: jsonEncode({
+          'overallScore': overallScore,
+          if (summary != null) 'summary': summary,
+        }),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Get interview session history
+  static Future<Map<String, dynamic>> getInterviewSessions({
+    required String idToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/interview/sessions'),
+        headers: await _securityHeaders(idToken: idToken),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException(
+        'Unable to connect to the server. '
+        'Make sure the backend server is running.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('An unexpected network error occurred.');
+    }
+  }
+
+  /// Get WebSocket URL for Gemini Live connection
+  static String getInterviewWebSocketUrl(String sessionId, String idToken) {
+    // Convert http:// to ws:// for WebSocket
+    final wsBaseUrl = baseUrl.replaceFirst('http://', 'ws://').replaceFirst('https://', 'wss://');
+    return '$wsBaseUrl/interview/$sessionId/ws?token=$idToken';
+  }
+
   // ============================================================
   // EXPORT MY DATA (Settings)
   // ============================================================

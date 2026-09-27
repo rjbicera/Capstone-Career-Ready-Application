@@ -97,6 +97,9 @@ class _SplashScreenState extends State<SplashScreen>
       final profile = await AuthApiService.me(idToken: idToken);
       AppState.instance.loadProfile(profile);
 
+      // Load latest resume analysis so it persists across app restarts
+      await AppState.instance.loadLatestResumeAnalysis(idToken: idToken);
+
       _go(
         profile['profileComplete'] == true
             ? const MainNavigation()

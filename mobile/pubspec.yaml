@@ -49,6 +49,12 @@ dependencies:
   firebase_app_check: ^0.3.2+10
   http_parser: ^4.1.2
 
+  # Mock Interview - Audio & WebSocket
+  web_socket_channel: ^2.4.0
+  record: ^6.0.0
+  just_audio: ^0.9.36
+  permission_handler: ^11.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
